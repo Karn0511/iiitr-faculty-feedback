@@ -1,0 +1,70 @@
+# Vercel Speed Insights Installation Report
+
+## Summary
+Successfully installed and configured Vercel Speed Insights for the Angular frontend application.
+
+## Changes Made
+
+### 1. Package Installation
+- **Package**: `@vercel/speed-insights@^2.0.0`
+- **Method**: Installed using `npm install @vercel/speed-insights --legacy-peer-deps`
+- **Reason for --legacy-peer-deps**: The package has peer dependencies optimized for multiple frameworks (Next.js, Svelte, etc.), which created conflicts with Angular's Vite version. Using the legacy peer deps flag allows installation without breaking the existing Angular build chain.
+
+### 2. Integration in main.ts
+**File Modified**: `frontend/src/main.ts`
+
+**Changes**:
+- Added import: `import { injectSpeedInsights } from '@vercel/speed-insights';`
+- Added initialization call: `injectSpeedInsights();`
+- Placed after the existing Vercel Analytics initialization to maintain consistency
+
+**Implementation Pattern**:
+Following the official Vercel Speed Insights documentation, I used the generic `injectSpeedInsights()` function approach, which is recommended for frameworks without explicit package exports (like Angular). This mirrors the existing pattern used for Vercel Analytics (`inject()` from `@vercel/analytics`).
+
+### 3. Files Modified
+- `frontend/package.json` - Added @vercel/speed-insights dependency
+- `frontend/package-lock.json` - Updated with new dependency tree
+- `frontend/src/main.ts` - Added Speed Insights initialization
+
+## Verification
+
+### Build Verification
+✅ Build completed successfully with no errors
+- Build time: ~10 seconds
+- Bundle sizes within acceptable limits
+- No TypeScript compilation errors
+- No breaking changes to existing functionality
+
+### Testing
+- Linter: Not configured in this project
+- Unit tests: Test configuration exists but no test files present
+- The application builds and runs correctly with the new integration
+
+## How Speed Insights Works
+
+Once deployed to Vercel:
+1. Speed Insights will automatically track Core Web Vitals (CLS, FID, LCP, FCP, TTFB, INP)
+2. Data will appear in the Vercel dashboard after users visit the site
+3. No additional configuration is needed - the integration is automatic
+4. The function injects the necessary tracking scripts at runtime
+
+## Next Steps for Users
+
+1. Deploy the application to Vercel
+2. Enable Speed Insights in the Vercel dashboard (Project Settings → Speed Insights)
+3. Wait for user visits to accumulate data
+4. View performance metrics in the Vercel dashboard
+
+## Technical Notes
+
+- The `injectSpeedInsights()` function is called during application bootstrap
+- It automatically handles script injection and metric collection
+- Debug mode is automatically enabled in development environments
+- Production deployments will use optimized tracking
+- The integration is non-blocking and won't affect application performance
+
+## Documentation References
+
+- Official Quickstart: https://vercel.com/docs/speed-insights/quickstart
+- Package Documentation: https://vercel.com/docs/speed-insights/package
+- Implementation follows the generic function approach recommended for frameworks without explicit support
