@@ -1,3 +1,42 @@
+# ============================================
+# IIIT Ranchi Faculty Feedback System
+# .gitignore
+# ============================================
+
+# --- EXCLUDED DIRECTORIES ---
+# Inspiration / reference material — never commit
 INSPIRATION/
+
+# Node.js dependencies
 node_modules/
+**/node_modules/
+
+# Environment variables — NEVER commit secrets
 .env
+**/.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+.angular/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+
+# Upload temp files
+uploads/
+
+# PM2 / runtime
+.pm2/
