@@ -25,22 +25,23 @@ A production-grade, secure, and AI-powered Faculty Feedback Management System bu
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js 20 LTS |
-| Framework | Express.js 5.x |
-| Database | MongoDB Atlas (Mongoose 9) |
+| Layer          | Technology                                                      |
+| -------------- | --------------------------------------------------------------- |
+| Runtime        | Node.js 20 LTS                                                  |
+| Framework      | Express.js 5.x                                                  |
+| Database       | MongoDB Atlas (Mongoose 9)                                      |
 | Authentication | JWT (HTTP-only cookie), Passport.js, Google OAuth 2.0, bcryptjs |
-| AI | Google Gemini 1.5 Flash (`@google/generative-ai`) |
-| File Uploads | Multer (memory storage) |
-| CSV Parsing | csv-parser |
-| Security | Helmet, express-rate-limit, CORS |
+| AI             | Google Gemini 1.5 Flash (`@google/generative-ai`)             |
+| File Uploads   | Multer (memory storage)                                         |
+| CSV Parsing    | csv-parser                                                      |
+| Security       | Helmet, express-rate-limit, CORS                                |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 20+
 - A MongoDB Atlas account
 - A Google Cloud project with OAuth 2.0 credentials
@@ -91,70 +92,80 @@ GEMINI_API_KEY=your_gemini_api_key
 ## API Reference
 
 ### Health Check
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/health` | None | Server & DB status |
+
+| Method | Endpoint    | Auth | Description        |
+| ------ | ----------- | ---- | ------------------ |
+| GET    | `/health` | None | Server & DB status |
 
 ---
 
 ### Authentication — `/api/auth`
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/api/auth/register` | None | Register with email/password |
-| POST | `/api/auth/login` | None | Login with email/password |
-| GET | `/api/auth/logout` | None | Clear JWT cookie |
-| POST | `/api/auth/otp/request` | None | Request OTP via phone |
-| POST | `/api/auth/otp/verify` | None | Verify OTP, receive JWT |
-| GET | `/api/auth/google` | None | Redirect to Google OAuth |
-| GET | `/api/auth/google/callback` | None | OAuth callback handler |
-| GET | `/api/auth/me` | JWT | Get current user info |
+
+| Method | Endpoint                      | Auth | Description                  |
+| ------ | ----------------------------- | ---- | ---------------------------- |
+| POST   | `/api/auth/register`        | None | Register with email/password |
+| POST   | `/api/auth/login`           | None | Login with email/password    |
+| GET    | `/api/auth/logout`          | None | Clear JWT cookie             |
+| POST   | `/api/auth/otp/request`     | None | Request OTP via phone        |
+| POST   | `/api/auth/otp/verify`      | None | Verify OTP, receive JWT      |
+| GET    | `/api/auth/google`          | None | Redirect to Google OAuth     |
+| GET    | `/api/auth/google/callback` | None | OAuth callback handler       |
+| GET    | `/api/auth/me`              | JWT  | Get current user info        |
 
 ---
 
 ### Admin — `/api/admin` *(Requires Admin role)*
+
 #### Data Ingestion
-| Method | Endpoint | Body | Description |
-|---|---|---|---|
-| POST | `/api/admin/upload/students` | `multipart/form-data` (CSV) | Bulk upload students |
-| POST | `/api/admin/upload/faculty` | `multipart/form-data` (CSV) | Bulk upload faculty |
-| POST | `/api/admin/upload/assignments` | `multipart/form-data` (CSV) | Upload course assignments |
+
+| Method | Endpoint                          | Body                          | Description               |
+| ------ | --------------------------------- | ----------------------------- | ------------------------- |
+| POST   | `/api/admin/upload/students`    | `multipart/form-data` (CSV) | Bulk upload students      |
+| POST   | `/api/admin/upload/faculty`     | `multipart/form-data` (CSV) | Bulk upload faculty       |
+| POST   | `/api/admin/upload/assignments` | `multipart/form-data` (CSV) | Upload course assignments |
 
 **CSV Formats:**
+
 - **Students:** `name, email, phone (opt), section`
 - **Faculty:** `name, email, phone (opt)`
 - **Assignments:** `courseName, courseCode, facultyEmail, section`
 
 #### Session Management
-| Method | Endpoint | Body | Description |
-|---|---|---|---|
-| POST | `/api/admin/sessions` | `{ sessionName, startDate, endDate }` | Create feedback session |
-| GET | `/api/admin/sessions` | — | List all sessions |
-| PATCH | `/api/admin/sessions/:id/toggle` | — | Open / close a session |
+
+| Method | Endpoint                           | Body                                    | Description             |
+| ------ | ---------------------------------- | --------------------------------------- | ----------------------- |
+| POST   | `/api/admin/sessions`            | `{ sessionName, startDate, endDate }` | Create feedback session |
+| GET    | `/api/admin/sessions`            | —                                      | List all sessions       |
+| PATCH  | `/api/admin/sessions/:id/toggle` | —                                      | Open / close a session  |
 
 #### Questionnaire Management
-| Method | Endpoint | Body | Description |
-|---|---|---|---|
-| POST | `/api/admin/questions` | `{ questionText }` | Add a new question |
-| GET | `/api/admin/questions` | `?active=true\|false` | List all questions |
-| PATCH | `/api/admin/questions/:id` | — | Toggle active/inactive |
+
+| Method | Endpoint                     | Body                   | Description            |
+| ------ | ---------------------------- | ---------------------- | ---------------------- |
+| POST   | `/api/admin/questions`     | `{ questionText }`   | Add a new question     |
+| GET    | `/api/admin/questions`     | `?active=true\|false` | List all questions     |
+| PATCH  | `/api/admin/questions/:id` | —                     | Toggle active/inactive |
 
 #### Analytics
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/admin/stats` | Total students, faculty, feedback, avg score |
-| GET | `/api/admin/leaderboard` | Faculty ranked by average score (top 50) |
-| GET | `/api/admin/users` | All users (`?role=Student\|Faculty\|Admin`) |
+
+| Method | Endpoint                   | Description                                  |
+| ------ | -------------------------- | -------------------------------------------- |
+| GET    | `/api/admin/stats`       | Total students, faculty, feedback, avg score |
+| GET    | `/api/admin/leaderboard` | Faculty ranked by average score (top 50)     |
+| GET    | `/api/admin/users`       | All users (`?role=Student\|Faculty\|Admin`)  |
 
 ---
 
 ### Student — `/api/student` *(Requires Student role)*
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/student/courses` | View courses with `feedbackSubmitted` flag |
-| POST | `/api/student/feedback` | Submit feedback *(session must be open)* |
-| GET | `/api/student/feedback/status` | Check which courses are already submitted |
+
+| Method | Endpoint                         | Description                                  |
+| ------ | -------------------------------- | -------------------------------------------- |
+| GET    | `/api/student/courses`         | View courses with `feedbackSubmitted` flag |
+| POST   | `/api/student/feedback`        | Submit feedback*(session must be open)*    |
+| GET    | `/api/student/feedback/status` | Check which courses are already submitted    |
 
 **POST `/api/student/feedback` body:**
+
 ```json
 {
   "courseId": "ObjectId",
@@ -169,15 +180,17 @@ GEMINI_API_KEY=your_gemini_api_key
 ---
 
 ### Faculty — `/api/faculty` *(Requires Faculty role)*
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/faculty/dashboard` | Per-course avg scores (8-stage pipeline) |
-| GET | `/api/faculty/summary` | Overall average + total responses |
-| GET | `/api/faculty/question-trends` | Score breakdown by question type |
-| GET | `/api/faculty/remarks/:courseId` | Anonymous text remarks (studentId excluded) |
-| GET | `/api/faculty/ai-summary/:courseId` | Gemini AI teaching insights |
+
+| Method | Endpoint                              | Description                                 |
+| ------ | ------------------------------------- | ------------------------------------------- |
+| GET    | `/api/faculty/dashboard`            | Per-course avg scores (8-stage pipeline)    |
+| GET    | `/api/faculty/summary`              | Overall average + total responses           |
+| GET    | `/api/faculty/question-trends`      | Score breakdown by question type            |
+| GET    | `/api/faculty/remarks/:courseId`    | Anonymous text remarks (studentId excluded) |
+| GET    | `/api/faculty/ai-summary/:courseId` | Gemini AI teaching insights                 |
 
 **`/api/faculty/ai-summary/:courseId` response:**
+
 ```json
 {
   "success": true,
@@ -244,4 +257,5 @@ GEMINI_API_KEY=your_gemini_api_key
 ---
 
 ## License
-MIT — Built with ❤️ for IIIT Ranchi
+
+ — Built with ❤️ for IIIT Ranchi
