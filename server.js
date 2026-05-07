@@ -27,11 +27,15 @@ app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (e.g. mobile apps, curl)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
+        
+        // Dynamically allow any verified Vercel preview or production deployment (.vercel.app)
+        const isVercel = /\.vercel\.app$/.test(origin);
+        if (allowedOrigins.indexOf(origin) !== -1 || isVercel) {
+            return callback(null, true);
+        } else {
             const errorMsg = `The CORS policy for this site does not allow access from origin: ${origin}`;
             return callback(new Error(errorMsg), false);
         }
-        return callback(null, true);
     },
     credentials: true                // Allow cookies across origins
 }));
