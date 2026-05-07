@@ -214,10 +214,10 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
                   <!-- Character reactive bounds counter -->
                   <span class="text-[10px] font-mono font-black tracking-wider"
                         [ngClass]="{
-                          'text-slate-400 bg-slate-950/60 border border-slate-900 px-2 py-0.5 rounded-full': feedbackForm?.get('remark')?.valid || !feedbackForm?.get('remark')?.touched,
-                          'text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full': feedbackForm?.get('remark')?.invalid && feedbackForm?.get('remark')?.touched
+                          'text-slate-400 bg-slate-950/60 border border-slate-900 px-2 py-0.5 rounded-full': feedbackForm.get('remark')?.valid || !feedbackForm.get('remark')?.touched,
+                          'text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full': feedbackForm.get('remark')?.invalid && feedbackForm.get('remark')?.touched
                         }">
-                    {{ feedbackForm?.get('remark')?.value?.length || 0 }} / 500
+                    {{ feedbackForm.get('remark')?.value?.length || 0 }} / 500
                   </span>
                 </div>
 
@@ -226,18 +226,18 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
                           placeholder="Provide constructive, professional comments on lecture structure, syllabus pacing, homework scope, interaction dynamics, or general recommendations..."
                           class="input-field py-3.5 px-4.5 leading-relaxed text-xs sm:text-sm resize-none"
                           [ngClass]="{
-                            'border-rose-500/30 focus:border-rose-500': feedbackForm?.get('remark')?.invalid && feedbackForm?.get('remark')?.touched
+                            'border-rose-500/30 focus:border-rose-500': feedbackForm.get('remark')?.invalid && feedbackForm.get('remark')?.touched
                           }"></textarea>
                 
                 <!-- Explicit validation helper messages -->
                 <div class="flex flex-col gap-1">
-                  <p *ngIf="feedbackForm?.get('remark')?.touched && feedbackForm?.get('remark')?.errors?.['required']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
+                  <p *ngIf="feedbackForm.get('remark')?.touched && feedbackForm.get('remark')?.errors?.['required']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
                     <span>⚠️</span> Qualitative remarks are required.
                   </p>
-                  <p *ngIf="feedbackForm?.get('remark')?.touched && feedbackForm?.get('remark')?.errors?.['minlength']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
+                  <p *ngIf="feedbackForm.get('remark')?.touched && feedbackForm.get('remark')?.errors?.['minlength']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
                     <span>⚠️</span> Qualitative remarks must be at least 10 characters long.
                   </p>
-                  <p *ngIf="feedbackForm?.get('remark')?.touched && feedbackForm?.get('remark')?.errors?.['maxlength']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
+                  <p *ngIf="feedbackForm.get('remark')?.touched && feedbackForm.get('remark')?.errors?.['maxlength']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
                     <span>⚠️</span> Qualitative remarks cannot exceed 500 characters.
                   </p>
                 </div>
