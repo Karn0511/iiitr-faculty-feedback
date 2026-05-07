@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 
 const feedbackSchema = new mongoose.Schema({
+    // The active evaluation window this feedback was submitted under.
+    // Creates the FeedbackSession → Feedback relational link in the schema graph.
+    sessionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FeedbackSession',
+        default: null  // null = submitted before session-linking was introduced (legacy records)
+    },
     courseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
@@ -11,7 +18,7 @@ const feedbackSchema = new mongoose.Schema({
         ref: 'User',
         required: [true, 'Faculty ID is required']
     },
-    // CRITICAL: This is for backend duplicate-checking only. 
+    // CRITICAL: This is for backend duplicate-checking only.
     // It should not be exposed to faculty or admin in the frontend to maintain anonymity.
     studentId: {
         type: mongoose.Schema.Types.ObjectId,

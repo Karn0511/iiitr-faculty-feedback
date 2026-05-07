@@ -1,5 +1,6 @@
-const Feedback      = require('../models/Feedback');
-const Assignment    = require('../models/Assignment');
+const Feedback         = require('../models/Feedback');
+const Assignment       = require('../models/Assignment');
+const FeedbackSession  = require('../models/FeedbackSession');
 
 // ============================================================
 // SUBMIT FEEDBACK (One-attempt enforced)
@@ -56,10 +57,17 @@ exports.submitFeedback = async (req, res) => {
             });
         }
 
+        // --- RESOLVE ACTIVE SESSION (schema graph link) ---
+        // Stamp the feedback with the currently open FeedbackSession so
+        // the feedbacksessions collection is properly connected to feedbacks.
+        const activeSession = await FeedbackSession.findOne({ isOpen: true }).select('_id').lean();
+        const sessionId = activeSession?._id || null;
+
         // --- SAVE FEEDBACK ---
         // studentId is stored silently for duplicate-checking only.
         // It is never returned or exposed to faculty/admin.
         const feedback = await Feedback.create({
+            sessionId,
             courseId,
             facultyId,
             studentId,
@@ -72,7 +80,8 @@ exports.submitFeedback = async (req, res) => {
             message:     'Feedback submitted successfully. Thank you!',
             data: {
                 submissionId: feedback._id,
-                submittedAt:  feedback.createdAt
+                submittedAt:  feedback.createdAt,
+                sessionId:    feedback.sessionId  // returned for client-side reference
                 // studentId deliberately omitted
             }
         });

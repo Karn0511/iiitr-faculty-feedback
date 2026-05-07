@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService, AdminStats, FacultyLeaderboardItem, QuestionItem, FeedbackSessionItem } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -156,20 +156,135 @@ import { FormsModule } from '@angular/forms';
                 <input type="text" [(ngModel)]="newSessionName" name="sessionName" placeholder="Session Name (e.g. Autumn Midterm 2026)"
                        class="input-field py-2.5 text-xs" required />
               </div>
+
+              <!-- Custom glassmorphism date pickers -->
               <div class="grid grid-cols-2 gap-3">
-                <div>
+
+                <!-- START DATE -->
+                <div class="relative">
                   <label class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Start Date</label>
-                  <input type="date" [(ngModel)]="sessionStart" name="start" class="input-field py-2 text-xs" required />
+                  <button type="button" (click)="toggleDashCal('start')"
+                          class="w-full flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl
+                                 border border-slate-700/60 bg-slate-900/50 hover:border-brand-500/50
+                                 text-xs font-mono text-left transition-all duration-200 focus:outline-none"
+                          [ngClass]="{'border-brand-500/60 bg-brand-500/5': dashActiveCal() === 'start'}">
+                    <span [class]="sessionStart ? 'text-white font-semibold' : 'text-slate-500'" class="truncate text-[10px]">
+                      {{ sessionStart ? dashFormatDisplay(sessionStart) : 'Pick date' }}
+                    </span>
+                    <svg class="w-3 h-3 text-slate-500 flex-shrink-0 transition-transform duration-200"
+                         [class.rotate-180]="dashActiveCal() === 'start'"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </button>
+                  <!-- Start Calendar -->
+                  <div *ngIf="dashActiveCal() === 'start'" class="absolute left-0 top-full mt-1 z-50"
+                       style="animation: slideDown 0.18s ease-out forwards; width: 250px;">
+                    <ng-container *ngTemplateOutlet="dashCalTpl; context: { $implicit: 'start' }"></ng-container>
+                  </div>
                 </div>
-                <div>
+
+                <!-- END DATE -->
+                <div class="relative">
                   <label class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">End Date</label>
-                  <input type="date" [(ngModel)]="sessionEnd" name="end" class="input-field py-2 text-xs" required />
+                  <button type="button" (click)="toggleDashCal('end')"
+                          class="w-full flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl
+                                 border border-slate-700/60 bg-slate-900/50 hover:border-emerald-500/50
+                                 text-xs font-mono text-left transition-all duration-200 focus:outline-none"
+                          [ngClass]="{'border-emerald-500/60 bg-emerald-500/5': dashActiveCal() === 'end'}">
+                    <span [class]="sessionEnd ? 'text-white font-semibold' : 'text-slate-500'" class="truncate text-[10px]">
+                      {{ sessionEnd ? dashFormatDisplay(sessionEnd) : 'Pick date' }}
+                    </span>
+                    <svg class="w-3 h-3 text-slate-500 flex-shrink-0 transition-transform duration-200"
+                         [class.rotate-180]="dashActiveCal() === 'end'"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </button>
+                  <!-- End Calendar -->
+                  <div *ngIf="dashActiveCal() === 'end'" class="absolute right-0 top-full mt-1 z-50"
+                       style="animation: slideDown 0.18s ease-out forwards; width: 250px;">
+                    <ng-container *ngTemplateOutlet="dashCalTpl; context: { $implicit: 'end' }"></ng-container>
+                  </div>
                 </div>
+
               </div>
-              <button type="submit" class="btn-primary w-full py-2.5 text-xs font-bold uppercase tracking-wider" [disabled]="!newSessionName || !sessionStart || !sessionEnd">
+
+              <!-- Range pill -->
+              <div *ngIf="sessionStart && sessionEnd"
+                   class="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-500/8 border border-brand-500/20 text-[9px] font-mono text-brand-300">
+                <span>📆</span>
+                <span>{{ dashFormatDisplay(sessionStart) }}</span>
+                <span class="text-slate-500">→</span>
+                <span>{{ dashFormatDisplay(sessionEnd) }}</span>
+              </div>
+
+              <button type="submit" class="btn-primary w-full py-2.5 text-xs font-bold uppercase tracking-wider"
+                      [disabled]="!newSessionName || !sessionStart || !sessionEnd">
                 Open Evaluation Window
               </button>
             </form>
+
+            <!-- ── SHARED DASHBOARD CALENDAR TEMPLATE ── -->
+            <ng-template #dashCalTpl let-which>
+              <div class="rounded-2xl overflow-hidden shadow-2xl"
+                   style="background: rgba(10,14,28,0.90); backdrop-filter: blur(28px) saturate(150%);
+                          border: 1px solid rgba(255,255,255,0.07);
+                          box-shadow: 0 20px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(99,102,241,0.12);">
+
+                <!-- Month nav -->
+                <div class="flex items-center justify-between px-3 py-2.5 border-b border-white/5">
+                  <button type="button" (click)="dashPrevMonth()"
+                          class="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/8 text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                  </button>
+                  <span class="text-[11px] font-black text-white tracking-wide select-none">
+                    {{ DASH_MONTHS[dashCalView().month] }} {{ dashCalView().year }}
+                  </span>
+                  <button type="button" (click)="dashNextMonth()"
+                          class="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/8 text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Day headers -->
+                <div class="grid grid-cols-7 px-2 pt-2 pb-1">
+                  <span *ngFor="let d of DASH_DAYS"
+                        class="text-center text-[8px] font-black uppercase tracking-widest select-none"
+                        [ngClass]="(d==='Sa'||d==='Su') ? 'text-violet-400/60' : 'text-slate-600'">{{ d }}</span>
+                </div>
+
+                <!-- Day grid -->
+                <div class="grid grid-cols-7 px-2 pb-2 gap-y-0.5">
+                  <button *ngFor="let cell of dashCalDays()"
+                          type="button"
+                          (click)="dashPickDate(which, cell.date)"
+                          [disabled]="!cell.inMonth"
+                          class="relative flex items-center justify-center h-7 w-full rounded-lg text-[10px] font-semibold
+                                 transition-all duration-150 select-none"
+                          [ngClass]="dashDayClass(which, cell)">
+                    {{ cell.date.getDate() }}
+                  </button>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex items-center justify-between px-3 py-2 border-t border-white/5">
+                  <button type="button" (click)="dashClearDate(which)"
+                          class="text-[9px] font-bold text-rose-400/70 hover:text-rose-300 uppercase tracking-wider transition-colors">
+                    Clear
+                  </button>
+                  <button type="button" (click)="dashPickDate(which, dashToday)"
+                          class="text-[9px] font-bold text-brand-400 hover:text-brand-300 uppercase tracking-wider transition-colors">
+                    Today
+                  </button>
+                </div>
+
+              </div>
+            </ng-template>
 
             <!-- Sessions List -->
             <div class="space-y-3 pt-4 border-t border-surface-border/50">
@@ -419,8 +534,108 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
   // Add Session Inputs
   newSessionName = '';
-  sessionStart = '';
-  sessionEnd = '';
+  sessionStart   = '';
+  sessionEnd     = '';
+
+  // ── Dashboard Calendar State ────────────────────────────────────────────────
+  readonly DASH_DAYS   = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+  readonly DASH_MONTHS = ['January','February','March','April','May','June',
+                          'July','August','September','October','November','December'];
+  readonly dashToday   = new Date();
+
+  dashActiveCal = signal<'start' | 'end' | null>(null);
+  dashCalView   = signal<{ year: number; month: number }>({
+    year:  new Date().getFullYear(),
+    month: new Date().getMonth()
+  });
+
+  readonly dashCalDays = computed(() => {
+    const { year, month } = this.dashCalView();
+    const firstDay = new Date(year, month, 1);
+    let startOffset = firstDay.getDay() - 1;
+    if (startOffset < 0) startOffset = 6;
+    const days: { date: Date; inMonth: boolean }[] = [];
+    for (let i = startOffset - 1; i >= 0; i--) days.push({ date: new Date(year, month, -i), inMonth: false });
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) days.push({ date: new Date(year, month, d), inMonth: true });
+    let next = 1;
+    while (days.length < 42) days.push({ date: new Date(year, month + 1, next++), inMonth: false });
+    return days;
+  });
+
+  toggleDashCal(which: 'start' | 'end') {
+    if (this.dashActiveCal() === which) { this.dashActiveCal.set(null); return; }
+    const raw   = which === 'start' ? this.sessionStart : this.sessionEnd;
+    const pivot = raw ? new Date(raw) : new Date();
+    this.dashCalView.set({ year: pivot.getFullYear(), month: pivot.getMonth() });
+    this.dashActiveCal.set(which);
+  }
+
+  dashPrevMonth() {
+    const { year, month } = this.dashCalView();
+    const d = new Date(year, month - 1, 1);
+    this.dashCalView.set({ year: d.getFullYear(), month: d.getMonth() });
+  }
+
+  dashNextMonth() {
+    const { year, month } = this.dashCalView();
+    const d = new Date(year, month + 1, 1);
+    this.dashCalView.set({ year: d.getFullYear(), month: d.getMonth() });
+  }
+
+  dashPickDate(which: 'start' | 'end', date: Date) {
+    const iso = this.dashToIso(date);
+    if (which === 'start') {
+      this.sessionStart = iso;
+      if (!this.sessionEnd || new Date(this.sessionEnd) <= date) {
+        this.sessionEnd = '';
+        this.dashCalView.set({ year: date.getFullYear(), month: date.getMonth() });
+        this.dashActiveCal.set('end');
+      } else {
+        this.dashActiveCal.set(null);
+      }
+    } else {
+      this.sessionEnd = iso;
+      this.dashActiveCal.set(null);
+    }
+  }
+
+  dashClearDate(which: 'start' | 'end') {
+    if (which === 'start') this.sessionStart = '';
+    else this.sessionEnd = '';
+    this.dashActiveCal.set(null);
+  }
+
+  dashDayClass(which: 'start' | 'end', cell: { date: Date; inMonth: boolean }): Record<string, boolean> {
+    if (!cell.inMonth) return { 'opacity-0 pointer-events-none': true };
+    const iso     = this.dashToIso(cell.date);
+    const isStart = iso === this.sessionStart;
+    const isEnd   = iso === this.sessionEnd;
+    const isToday = iso === this.dashToIso(this.dashToday);
+    const inRange = !!(this.sessionStart && this.sessionEnd && iso > this.sessionStart && iso < this.sessionEnd);
+    const isWknd  = cell.date.getDay() === 0 || cell.date.getDay() === 6;
+    return {
+      'bg-brand-600 text-white font-black shadow-lg rounded-l-lg': isStart,
+      'bg-emerald-600 text-white font-black shadow-lg rounded-r-lg': isEnd,
+      'bg-brand-500/12 text-brand-200 rounded-none': inRange && !isStart && !isEnd,
+      'ring-1 ring-brand-500/60': isToday && !isStart && !isEnd,
+      'hover:bg-white/8 text-slate-300': !isStart && !isEnd && !inRange,
+      'text-violet-300': isWknd && !isStart && !isEnd,
+    };
+  }
+
+  dashToIso(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  dashFormatDisplay(iso: string): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return `${d.getDate()} ${this.DASH_MONTHS[d.getMonth()].slice(0,3)} ${d.getFullYear()}`;
+  }
 
   getObjectKeys(obj: any): string[] {
     return obj ? Object.keys(obj) : [];
