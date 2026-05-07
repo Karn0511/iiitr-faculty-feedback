@@ -336,7 +336,7 @@ export class StudentDashboardComponent implements OnInit {
   pendingCount       = computed(() => this.courses().filter(c => !c.feedbackSubmitted).length);
 
   // Reactive evaluation form
-  feedbackForm!: FormGroup;
+  feedbackForm?: FormGroup;
 
   ngOnInit() {
     this.fetchData();
@@ -408,7 +408,8 @@ export class StudentDashboardComponent implements OnInit {
 
   submitEvaluation() {
     const assign = this.selectedAssignment();
-    if (!assign || !this.feedbackForm || this.feedbackForm.invalid) return;
+    const form = this.feedbackForm;
+    if (!assign || !form || form.invalid) return;
 
     this.submitting.set(true);
     this.submitError.set('');
@@ -417,14 +418,14 @@ export class StudentDashboardComponent implements OnInit {
     // Parse ratings dynamically to generate standard payload parameters
     const ratingsArray = this.questions().map(q => ({
       questionId: q._id,
-      score: Number(this.feedbackForm.get(q._id)?.value)
+      score: Number(form.get(q._id)?.value)
     }));
 
     const payload: FeedbackPayload = {
       courseId: assign.course._id,
       facultyId: assign.faculty._id,
       ratings: ratingsArray,
-      remark: this.feedbackForm.get('remark')?.value
+      remark: form.get('remark')?.value
     };
 
     this.studentService.submitFeedback(payload).subscribe({
