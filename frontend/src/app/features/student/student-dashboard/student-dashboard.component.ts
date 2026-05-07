@@ -361,7 +361,7 @@ export class StudentDashboardComponent implements OnInit {
     });
 
     // Fetch Questionnaire active questions list
-    this.adminService.getAllQuestions().subscribe({
+    this.studentService.getActiveQuestions().subscribe({
       next: (res) => {
         const active = (res?.data?.questions || []).filter((q: any) => q.isActive);
         this.questions.set(active);

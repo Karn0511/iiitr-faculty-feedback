@@ -43,4 +43,8 @@ export class StudentService {
   getSubmissionStatus(): Observable<any> {
     return this.http.get<any>(`${this.API}/feedback/status`, { withCredentials: true });
   }
+
+  getActiveQuestions(): Observable<{ success: boolean; data: { questions: any[] } }> {
+    return this.http.get<any>(`${this.API}/questions`, { withCredentials: true });
+  }
 }

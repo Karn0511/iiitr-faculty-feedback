@@ -157,3 +157,23 @@ exports.getAvailableCourses = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// ============================================================
+// GET ACTIVE QUESTIONS FOR EVALUATION
+// Lists all active questions for the student evaluation form.
+// Route: GET /api/student/questions
+// ============================================================
+exports.getQuestions = async (req, res) => {
+    try {
+        const Questionnaire = require('../models/Questionnaire');
+        const questions = await Questionnaire.find({ isActive: true }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count:   questions.length,
+            data:    { questions }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

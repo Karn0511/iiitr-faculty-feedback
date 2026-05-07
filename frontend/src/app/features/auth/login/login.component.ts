@@ -34,8 +34,54 @@ interface CarouselSlide {
 
           <!-- Institutional Header branding -->
           <div class="relative z-10 flex items-center gap-3.5">
-            <div class="w-11 h-11 flex items-center justify-center bg-slate-900/60 border border-slate-800 rounded-xl p-1 shadow-md">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Indian_Institute_of_Information_Technology%2C_Ranchi_Logo.png" class="w-9 h-9 object-contain" alt="IIIT Ranchi Seal" />
+            <div class="w-11 h-11 flex items-center justify-center bg-slate-900/60 border border-slate-800 rounded-xl p-1.5 shadow-md">
+              <svg class="w-8 h-8" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Outer circle border with golden glow -->
+                <circle cx="50" cy="50" r="45" stroke="url(#logoGold)" stroke-width="3" fill="rgba(15, 23, 42, 0.6)"></circle>
+                <circle cx="50" cy="50" r="40" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1"></circle>
+                
+                <!-- Technology / Network Hub Nodes -->
+                <g opacity="0.85">
+                  <line x1="32" y1="50" x2="50" y2="32" stroke="url(#logoBlue)" stroke-width="1.5"></line>
+                  <line x1="50" y1="32" x2="68" y2="50" stroke="url(#logoBlue)" stroke-width="1.5"></line>
+                  <line x1="68" y1="50" x2="50" y2="68" stroke="url(#logoBlue)" stroke-width="1.5"></line>
+                  <line x1="50" y1="68" x2="32" y2="50" stroke="url(#logoBlue)" stroke-width="1.5"></line>
+                  
+                  <line x1="50" y1="22" x2="50" y2="78" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" stroke-dasharray="2 2"></line>
+                  <line x1="22" y1="50" x2="78" y2="50" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" stroke-dasharray="2 2"></line>
+                </g>
+
+                <!-- Central Crest / Shield -->
+                <path d="M42 38C42 38 46 36 50 36C54 36 58 38 58 38V54C58 60 50 64 50 64C50 64 42 60 42 54V38Z" fill="url(#crestBg)" stroke="url(#logoGold)" stroke-width="2" filter="url(#glow)"></path>
+
+                <!-- Central symbol: Glowing IT Node with Rising Sun / Lamp -->
+                <circle cx="50" cy="46" r="4" fill="#ffffff" filter="url(#glow)"></circle>
+                <circle cx="50" cy="46" r="2" fill="url(#logoGold)"></circle>
+                
+                <!-- Abstract Book at the bottom of the crest -->
+                <path d="M45 54H55M45 57H55" stroke="rgba(255, 255, 255, 0.6)" stroke-width="1" stroke-linecap="round"></path>
+
+                <!-- Gradients & Filters Definition -->
+                <defs>
+                  <linearGradient id="logoGold" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#fbbf24"></stop>
+                    <stop offset="50%" stop-color="#f59e0b"></stop>
+                    <stop offset="100%" stop-color="#d97706"></stop>
+                  </linearGradient>
+                  <linearGradient id="logoBlue" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#3b82f6"></stop>
+                    <stop offset="100%" stop-color="#8b5cf6"></stop>
+                  </linearGradient>
+                  <linearGradient id="crestBg" x1="42" y1="36" x2="58" y2="64" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#1e1b4b"></stop>
+                    <stop offset="100%" stop-color="#030712"></stop>
+                  </linearGradient>
+                  <filter id="glow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
+                    <feGaussianBlur stdDeviation="1.5" result="blur"></feGaussianBlur>
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"></feComposite>
+                  </filter>
+                </defs>
+              </svg>
             </div>
             <div>
               <h2 class="text-white font-black text-sm tracking-tight leading-none uppercase">IIIT Ranchi</h2>
@@ -306,8 +352,8 @@ interface CarouselSlide {
                 <div class="flex-1 h-px bg-slate-800"></div>
               </div>
 
-              <button (click)="loginWithGoogle()" class="btn-ghost w-full py-3 rounded-xl flex items-center justify-center gap-3 font-semibold text-xs hover:scale-[1.01] transition-transform">
-                <svg class="w-4.5 h-4.5" viewBox="0 0 24 24">
+              <button (click)="loginWithGoogle()" class="w-full py-3 rounded-xl border border-slate-800 bg-slate-950/40 hover:bg-slate-900/60 hover:border-slate-700 transition-all flex items-center justify-center gap-3 text-xs font-bold text-slate-300 hover:text-white hover:scale-[1.01]">
+                <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
                   <path fill="#ea4335" d="M12 5.04c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.76 14.97.67 12 .67 7.7.67 3.99 3.14 2.18 6.74l3.66 2.84c.87-2.6 3.3-4.54 6.16-4.54z"/>
                   <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31l3.57 2.77c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34a853" d="M12 23.33c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.86 7.7 23.33 12 23.33z"/>

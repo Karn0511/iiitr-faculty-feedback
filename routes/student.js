@@ -33,4 +33,10 @@ router.post('/feedback',
 // ============================================================
 router.get('/feedback/status', studentController.getSubmissionStatus);
 
+// ============================================================
+// QUESTIONNAIRE ROUTE FOR STUDENTS
+// GET /api/student/questions
+// ============================================================
+router.get('/questions', studentController.getQuestions);
+
 module.exports = router;
