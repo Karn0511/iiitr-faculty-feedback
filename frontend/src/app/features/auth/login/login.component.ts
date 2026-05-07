@@ -288,14 +288,36 @@ interface CarouselSlide {
                 <span>⚠️</span> <span>{{ error() }}</span>
               </div>
 
-              <!-- Action Button -->
-              <button type="submit" class="btn-primary w-full py-3.5 text-xs font-black uppercase tracking-wider rounded-xl shadow-glow shadow-brand-500/20" [disabled]="loading() || loginForm.invalid">
-                <svg *ngIf="loading()" class="w-4 h-4 animate-spin inline mr-2 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
-                {{ loading() ? 'Authenticating...' : 'Secure Sign In' }}
-              </button>
+              <!-- Action Row: Theme Toggle + Sign In Button -->
+              <div class="flex items-center gap-3">
+
+                <!-- Day / Night Mode Toggle (left of sign-in) -->
+                <button type="button" (click)="toggleTheme()"
+                        title="Toggle day / night mode"
+                        class="flex-shrink-0 w-12 h-12 rounded-xl border transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                        [ngClass]="isDarkMode() ? 'border-slate-700/60 bg-slate-900/50 hover:border-brand-500/40 hover:bg-slate-800/60' : 'border-amber-400/40 bg-amber-50/10 hover:border-amber-400/60 hover:bg-amber-50/20'">
+                  <!-- Moon (dark mode) -->
+                  <svg *ngIf="isDarkMode()" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                  </svg>
+                  <!-- Sun (light mode) -->
+                  <svg *ngIf="!isDarkMode()" class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+                  </svg>
+                </button>
+
+                <!-- Sign In Button -->
+                <button type="submit" class="btn-primary flex-1 py-3.5 text-xs font-black uppercase tracking-wider rounded-xl shadow-glow shadow-brand-500/20" [disabled]="loading() || loginForm.invalid">
+                  <svg *ngIf="loading()" class="w-4 h-4 animate-spin inline mr-2 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  {{ loading() ? 'Authenticating...' : 'Secure Sign In' }}
+                </button>
+
+              </div>
             </form>
 
             <!-- FORM: Phone OTP Sign In (If not admin) -->
@@ -375,86 +397,138 @@ interface CarouselSlide {
         </div>
       </div>
 
-      <!-- C. PREMIUM BOOT SCREEN OVERLAY -->
+      <!-- C. PREMIUM ROLE-AWARE BOOT SCREEN OVERLAY -->
       <div *ngIf="isBootingApp"
            class="fixed inset-0 z-[100] flex flex-col items-center justify-center"
            style="background: #020617;">
 
-        <!-- Ambient background blobs matching main page -->
+        <!-- Ambient blobs — colour-keyed to the logged-in role -->
         <div class="absolute inset-0 pointer-events-none overflow-hidden">
-          <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-20"
-               style="background: radial-gradient(circle, #6366f1 0%, transparent 70%); filter: blur(80px);"></div>
-          <div class="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] rounded-full opacity-15"
-               style="background: radial-gradient(circle, #8b5cf6 0%, transparent 70%); filter: blur(80px);"></div>
+          <!-- Student: indigo -->
+          <ng-container *ngIf="bootingRole() === 'student'">
+            <div class="absolute top-[-15%] left-[-5%] w-[600px] h-[600px] rounded-full opacity-20"
+                 style="background: radial-gradient(circle, #6366f1 0%, transparent 70%); filter: blur(100px);"></div>
+            <div class="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full opacity-15"
+                 style="background: radial-gradient(circle, #818cf8 0%, transparent 70%); filter: blur(80px);"></div>
+          </ng-container>
+          <!-- Faculty: emerald -->
+          <ng-container *ngIf="bootingRole() === 'faculty'">
+            <div class="absolute top-[-15%] left-[-5%] w-[600px] h-[600px] rounded-full opacity-20"
+                 style="background: radial-gradient(circle, #10b981 0%, transparent 70%); filter: blur(100px);"></div>
+            <div class="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full opacity-15"
+                 style="background: radial-gradient(circle, #34d399 0%, transparent 70%); filter: blur(80px);"></div>
+          </ng-container>
+          <!-- Admin: violet -->
+          <ng-container *ngIf="bootingRole() === 'admin'">
+            <div class="absolute top-[-15%] left-[-5%] w-[600px] h-[600px] rounded-full opacity-20"
+                 style="background: radial-gradient(circle, #8b5cf6 0%, transparent 70%); filter: blur(100px);"></div>
+            <div class="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full opacity-15"
+                 style="background: radial-gradient(circle, #a78bfa 0%, transparent 70%); filter: blur(80px);"></div>
+          </ng-container>
         </div>
 
         <!-- Central content -->
-        <div class="relative z-10 flex flex-col items-center gap-8 px-10">
+        <div class="relative z-10 flex flex-col items-center gap-6 px-10">
 
-          <!-- Logo with animated glow ring -->
+          <!-- Role badge chip -->
+          <div class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border"
+               [ngClass]="{
+                 'bg-brand-500/15 border-brand-500/30 text-brand-300': bootingRole() === 'student',
+                 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300': bootingRole() === 'faculty',
+                 'bg-violet-500/15 border-violet-500/30 text-violet-300': bootingRole() === 'admin'
+               }">
+            {{ bootingRole() === 'student' ? '🎓 Student Portal' : bootingRole() === 'faculty' ? '👨‍🏫 Faculty Portal' : '🛡️ Admin Control Panel' }}
+          </div>
+
+          <!-- Logo with role-coloured glow ring -->
           <div class="relative flex items-center justify-center">
-            <div class="absolute w-28 h-28 rounded-full border border-brand-500/30 animate-ping"
-                 style="animation-duration: 2.5s;"></div>
-            <div class="absolute w-24 h-24 rounded-full border border-brand-500/20"></div>
-            <div class="w-20 h-20 rounded-full bg-slate-900/90 border border-slate-700/60 flex items-center justify-center"
-                 style="box-shadow: 0 0 40px rgba(99,102,241,0.3), 0 0 80px rgba(99,102,241,0.1);">
-              <div class="w-14 h-14 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                <img src="/logo.png" class="w-11 h-11 object-contain" alt="IIIT Ranchi" />
+            <!-- Outer ping ring -->
+            <div class="absolute w-32 h-32 rounded-full border animate-ping"
+                 style="animation-duration: 2.8s;"
+                 [ngClass]="{
+                   'border-brand-500/25': bootingRole() === 'student',
+                   'border-emerald-500/25': bootingRole() === 'faculty',
+                   'border-violet-500/25': bootingRole() === 'admin'
+                 }"></div>
+            <!-- Static ring -->
+            <div class="absolute w-28 h-28 rounded-full border"
+                 [ngClass]="{
+                   'border-brand-500/15': bootingRole() === 'student',
+                   'border-emerald-500/15': bootingRole() === 'faculty',
+                   'border-violet-500/15': bootingRole() === 'admin'
+                 }"></div>
+            <!-- Logo bubble -->
+            <div class="w-22 h-22 w-[88px] h-[88px] rounded-full bg-slate-900/90 border border-slate-700/60 flex items-center justify-center"
+                 [ngStyle]="{
+                   'box-shadow': bootingRole() === 'student'
+                     ? '0 0 40px rgba(99,102,241,0.35), 0 0 80px rgba(99,102,241,0.12)'
+                     : bootingRole() === 'faculty'
+                     ? '0 0 40px rgba(16,185,129,0.35), 0 0 80px rgba(16,185,129,0.12)'
+                     : '0 0 40px rgba(139,92,246,0.35), 0 0 80px rgba(139,92,246,0.12)'
+                 }">
+              <div class="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <img src="/logo.png" class="w-12 h-12 object-contain" alt="IIIT Ranchi" />
               </div>
             </div>
           </div>
 
-          <!-- Name -->
+          <!-- Institution title -->
           <div class="text-center">
-            <p class="text-white font-black text-lg tracking-tight">IIIT Ranchi</p>
+            <p class="text-white font-black text-xl tracking-tight">IIIT Ranchi</p>
             <p class="text-slate-500 text-[10px] font-bold tracking-widest uppercase mt-0.5">Faculty Feedback System</p>
           </div>
 
           <!-- Role-aware progress bar -->
-          <div class="w-72 space-y-3">
+          <div class="w-80 space-y-3">
             <div class="w-full h-[3px] bg-slate-800/80 rounded-full overflow-hidden">
               <div class="h-full rounded-full transition-all duration-200 ease-out"
                    [style.width.%]="bootProgress()"
                    [ngClass]="{
-                     'bg-gradient-to-r from-brand-600 via-brand-400 to-violet-400': selectedRole() === 'student' || !selectedRole(),
-                     'bg-gradient-to-r from-emerald-600 via-emerald-400 to-cyan-400': selectedRole() === 'faculty',
-                     'bg-gradient-to-r from-violet-600 via-brand-500 to-cyan-500': selectedRole() === 'admin'
+                     'bg-gradient-to-r from-brand-600 via-brand-400 to-violet-400': bootingRole() === 'student',
+                     'bg-gradient-to-r from-emerald-600 via-emerald-400 to-cyan-400': bootingRole() === 'faculty',
+                     'bg-gradient-to-r from-violet-600 via-brand-500 to-cyan-500': bootingRole() === 'admin'
                    }"></div>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest">Loading</span>
+              <span class="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest">Initializing</span>
               <span class="text-[10px] font-mono font-black tabular-nums"
                     [ngClass]="{
-                      'text-brand-400': selectedRole() === 'student' || !selectedRole(),
-                      'text-emerald-400': selectedRole() === 'faculty',
-                      'text-violet-400': selectedRole() === 'admin'
+                      'text-brand-400': bootingRole() === 'student',
+                      'text-emerald-400': bootingRole() === 'faculty',
+                      'text-violet-400': bootingRole() === 'admin'
                     }">{{ bootProgress() }}%</span>
             </div>
           </div>
 
-          <!-- Terminal-style status line -->
-          <div class="font-mono text-[11px] text-center px-4 min-h-[20px]">
+          <!-- Terminal-style animated status messages -->
+          <div class="font-mono text-[11px] text-center px-4 min-h-[18px]">
+
+            <!-- Phase 1: 0-30% (same for all) -->
             <span *ngIf="bootProgress() < 30" class="text-slate-500 animate-pulse">
-              &rsaquo; Establishing encrypted tunnel to cloud...
+              &rsaquo; Establishing encrypted channel to cloud...
             </span>
-            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && selectedRole() === 'student'" class="text-brand-400 animate-pulse">
-              &rsaquo; Loading student course registry &amp; session keys...
+
+            <!-- Phase 2: 30-65% (role-specific) -->
+            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && bootingRole() === 'student'" class="text-brand-400 animate-pulse">
+              &rsaquo; Fetching course registry &amp; semester assignments...
             </span>
-            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && selectedRole() === 'faculty'" class="text-emerald-400 animate-pulse">
-              &rsaquo; Syncing analytics engine &amp; feedback aggregates...
+            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && bootingRole() === 'faculty'" class="text-emerald-400 animate-pulse">
+              &rsaquo; Loading feedback analytics &amp; AI sentiment engine...
             </span>
-            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && selectedRole() === 'admin'" class="text-violet-400 animate-pulse">
-              &rsaquo; Initializing control terminal &amp; session locks...
+            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && bootingRole() === 'admin'" class="text-violet-400 animate-pulse">
+              &rsaquo; Opening control terminal &amp; validating session locks...
             </span>
-            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && !selectedRole()" class="text-slate-400 animate-pulse">
-              &rsaquo; Validating institutional authorization tokens...
-            </span>
+
+            <!-- Phase 3: 65-92% -->
             <span *ngIf="bootProgress() >= 65 && bootProgress() < 92" class="text-slate-400 animate-pulse">
               &rsaquo; Verifying role permissions &amp; security scope...
             </span>
-            <span *ngIf="bootProgress() >= 92" class="text-slate-300 animate-pulse">
-              &rsaquo; Access granted. Launching dashboard...
+
+            <!-- Phase 4: 92-100% -->
+            <span *ngIf="bootProgress() >= 92" class="text-slate-200 animate-pulse">
+              &rsaquo; ✓ Access granted. Launching dashboard...
             </span>
+
           </div>
 
         </div>
@@ -676,9 +750,13 @@ export class LoginComponent implements OnInit, AfterViewInit {
   // Sessional Progressive booting screen states
   isBootingApp   = false;
   bootProgress   = signal(0);
+  bootingRole    = signal<string>('student'); // Actual authenticated role (not UI selection)
 
   // Sandbox profile random label (updates on each autofill tap)
   sandboxLabel   = signal<string>('Tap to auto-fill a random account');
+
+  // Theme toggle (dark/light mode)
+  isDarkMode     = signal<boolean>(true);
 
   // Left Panel features slides carousel
   activeSlideIndex = signal(0);
@@ -899,20 +977,32 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   // Play full-screen progressive sessional boot transitions
   showBootingScreen(role: string) {
+    this.bootingRole.set(role); // Stamp the REAL authenticated role for boot screen
     this.isBootingApp = true;
     this.bootProgress.set(0);
 
     const interval = setInterval(() => {
       if (this.bootProgress() < 100) {
-        this.bootProgress.update(p => Math.min(100, p + Math.floor(Math.random() * 15 + 10)));
+        this.bootProgress.update(p => Math.min(100, p + Math.floor(Math.random() * 12 + 8)));
       } else {
         clearInterval(interval);
         setTimeout(() => {
           this.isBootingApp = false;
           this.auth.redirectByRole();
-        }, 800);
+        }, 900);
       }
-    }, 180);
+    }, 160);
+  }
+
+  toggleTheme() {
+    const isDark = this.isDarkMode();
+    this.isDarkMode.set(!isDark);
+    // Toggle the theme class on the document root
+    if (isDark) {
+      document.documentElement.classList.add('theme-academic');
+    } else {
+      document.documentElement.classList.remove('theme-academic');
+    }
   }
 
   onSendOtp() {
