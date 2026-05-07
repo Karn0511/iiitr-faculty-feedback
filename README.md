@@ -441,14 +441,7 @@ Collects all anonymous text remarks for a course and sends them to Gemini with a
 ### 2. Admin AI Raw Text Importer (`POST /api/admin/ingest-ai`)
 Accepts unstructured text (e.g. pasted from an email, PDF, or spreadsheet) and uses a strict schema-aware prompt to extract and return a clean JSON array matching the selected entity type (students / faculty / assignments). The admin can review and edit all rows in an inline preview table before committing to the database.
 
----
 
-## 📄 License
-
-```
-MIT License — Ashutosh Karn
-Built with ❤️ for IIIT Ranchi
-```
 
 <div align="center">
 
