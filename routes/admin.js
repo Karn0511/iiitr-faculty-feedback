@@ -59,5 +59,18 @@ router.get('/stats', adminController.getGlobalStats);
 // GET /api/admin/leaderboard — Faculty ranked by average score (top 50)
 router.get('/leaderboard', adminController.getFacultyLeaderboard);
 
+// ============================================================
+// QUESTIONNAIRE MANAGEMENT — Protected: Admin only
+// Questions are soft-toggled (never deleted) to preserve
+// the integrity of historical feedback analytics.
+// ============================================================
+
+// POST  /api/admin/questions       — Add a new question
+// GET   /api/admin/questions       — List all questions (?active=true|false)
+// PATCH /api/admin/questions/:id   — Toggle active/inactive
+router.post('/questions',       adminController.addQuestion);
+router.get('/questions',        adminController.getAllQuestions);
+router.patch('/questions/:id',  adminController.toggleQuestion);
+
 module.exports = router;
 

@@ -1,0 +1,160 @@
+{
+  "info": {
+    "name": "IIIT Ranchi Faculty Feedback System",
+    "description": "Complete API collection for the IIIT Ranchi Faculty Feedback System. Import into Postman and set the {{baseUrl}} variable to http://localhost:5000.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000", "type": "string" },
+    { "key": "token",   "value": "", "type": "string" },
+    { "key": "courseId","value": "", "type": "string" },
+    { "key": "facultyId","value":"", "type": "string" },
+    { "key": "sessionId","value":"", "type": "string" },
+    { "key": "questionId","value":"","type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+        "description": "Verify the server is running and MongoDB is connected."
+      }
+    },
+    {
+      "name": "2. Register (Local)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@iiitranchi.ac.in\",\n  \"password\": \"Admin@1234\",\n  \"role\": \"Admin\"\n}"
+        },
+        "description": "Register a new user. JWT is returned as an HTTP-only cookie. Role can be Admin, Faculty, or Student."
+      }
+    },
+    {
+      "name": "3. Login (Local)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.success) {",
+              "  pm.collectionVariables.set('token', pm.cookies.get('jwt') || '');",
+              "  console.log('Logged in as:', res.data.user.role);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@iiitranchi.ac.in\",\n  \"password\": \"Admin@1234\"\n}"
+        },
+        "description": "Login with email and password. JWT is set as an HTTP-only cookie."
+      }
+    },
+    {
+      "name": "4. Add Feedback Question (Admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/admin/questions", "host": ["{{baseUrl}}"], "path": ["api","admin","questions"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"questionText\": \"How effectively did the faculty explain complex concepts?\"\n}"
+        },
+        "description": "Admin adds a new feedback question to the question bank."
+      }
+    },
+    {
+      "name": "5. Create Feedback Session (Admin)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.success) pm.collectionVariables.set('sessionId', res.data.session._id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/admin/sessions", "host": ["{{baseUrl}}"], "path": ["api","admin","sessions"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sessionName\": \"Mid-Semester Feedback 2025\",\n  \"startDate\": \"2025-10-01T00:00:00.000Z\",\n  \"endDate\": \"2025-10-15T23:59:59.000Z\"\n}"
+        },
+        "description": "Admin creates a new time-windowed feedback session. isOpen defaults to false."
+      }
+    },
+    {
+      "name": "6. Toggle Session Open (Admin)",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/admin/sessions/{{sessionId}}/toggle", "host": ["{{baseUrl}}"], "path": ["api","admin","sessions","{{sessionId}}","toggle"] },
+        "description": "Flip the isOpen flag. Call twice to open then close."
+      }
+    },
+    {
+      "name": "7. Submit Feedback (Student)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/student/feedback", "host": ["{{baseUrl}}"], "path": ["api","student","feedback"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"facultyId\": \"{{facultyId}}\",\n  \"ratings\": [\n    { \"questionId\": \"{{questionId}}\", \"score\": 9 }\n  ],\n  \"remark\": \"The professor explains concepts very clearly and is always available for doubts.\"\n}"
+        },
+        "description": "Student submits feedback. Blocked if: session is closed, already submitted, wrong section."
+      }
+    },
+    {
+      "name": "8. Faculty Dashboard (Faculty)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/faculty/dashboard", "host": ["{{baseUrl}}"], "path": ["api","faculty","dashboard"] },
+        "description": "Returns per-course, per-question average scores using the 8-stage MongoDB aggregation pipeline."
+      }
+    },
+    {
+      "name": "9. Faculty AI Insights (Faculty)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/faculty/ai-summary/{{courseId}}", "host": ["{{baseUrl}}"], "path": ["api","faculty","ai-summary","{{courseId}}"] },
+        "description": "Gemini 1.5 Flash analyzes anonymous remarks and returns 3 strengths, 2 improvements, sentiment score, and an executive summary."
+      }
+    },
+    {
+      "name": "10. Admin Global Leaderboard (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/admin/leaderboard", "host": ["{{baseUrl}}"], "path": ["api","admin","leaderboard"] },
+        "description": "Returns all faculty ranked by average feedback score (highest first, top 50). Uses a 7-stage MongoDB aggregation pipeline."
+      }
+    }
+  ]
+}

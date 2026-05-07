@@ -487,3 +487,92 @@ exports.getFacultyLeaderboard = async (req, res) => {
     }
 };
 
+// ============================================================
+// QUESTIONNAIRE MANAGEMENT
+// Admins manage the question bank. Questions are never deleted
+// (isActive toggle) to preserve historical feedback integrity.
+// ============================================================
+
+// ADD QUESTION
+// Route: POST /api/admin/questions
+exports.addQuestion = async (req, res) => {
+    try {
+        const { questionText } = req.body;
+
+        if (!questionText || !questionText.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'questionText is required and cannot be empty.'
+            });
+        }
+
+        const Questionnaire = require('../models/Questionnaire');
+        const question = await Questionnaire.create({
+            questionText: questionText.trim(),
+            isActive:     true
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Question added successfully.',
+            data:    { question }
+        });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// TOGGLE QUESTION ACTIVE/INACTIVE
+// Route: PATCH /api/admin/questions/:id
+// Soft-toggle: preserves historical data integrity.
+// Deactivated questions are excluded from new feedback forms
+// but their past ratings remain valid for analytics.
+exports.toggleQuestion = async (req, res) => {
+    try {
+        const { id }        = req.params;
+        const Questionnaire = require('../models/Questionnaire');
+
+        const question = await Questionnaire.findById(id);
+        if (!question) {
+            return res.status(404).json({
+                success: false,
+                message: 'Question not found.'
+            });
+        }
+
+        question.isActive = !question.isActive;
+        await question.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Question is now ${question.isActive ? '✅ Active' : '⛔ Inactive'}.`,
+            data:    { question }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// GET ALL QUESTIONS (active and inactive)
+// Route: GET /api/admin/questions
+// Optional query: ?active=true|false
+exports.getAllQuestions = async (req, res) => {
+    try {
+        const Questionnaire = require('../models/Questionnaire');
+        const filter        = {};
+
+        if (req.query.active !== undefined) {
+            filter.isActive = req.query.active === 'true';
+        }
+
+        const questions = await Questionnaire.find(filter).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count:   questions.length,
+            data:    { questions }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
