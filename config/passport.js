@@ -56,24 +56,12 @@ passport.use(
                 });
             }
 
-            // Find or auto-create the user
+            // Find the existing user
             let user = await User.findOne({ email });
 
-            if (!user) {
-                // Auto-elevate creator/tester to Admin role in development
-                let role = 'Student';
-                if (email.startsWith('karn') || email.includes('admin')) {
-                    role = 'Admin';
-                } else if (email.includes('faculty')) {
-                    role = 'Faculty';
-                }
-
-                user = await User.create({
-                    name:    profile.displayName,
-                    email:   email,
-                    avatar:  profile.photos?.[0]?.value || null,
-                    role:    role,
-                    section: 'A'
+            if (!user || (user.role !== 'Faculty' && user.role !== 'Admin')) {
+                return done(null, false, {
+                    message: 'Access denied. Google SSO is scoped exclusively for Faculty. Students must login via Roll Number.'
                 });
             }
 

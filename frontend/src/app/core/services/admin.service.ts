@@ -73,4 +73,37 @@ export class AdminService {
     const url = role ? `${this.API}/users?role=${role}` : `${this.API}/users`;
     return this.http.get<any>(url, { withCredentials: true });
   }
+
+  uploadStudents(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${this.API}/upload/students`, formData, { withCredentials: true });
+  }
+
+  uploadFaculty(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${this.API}/upload/faculty`, formData, { withCredentials: true });
+  }
+
+  uploadAssignments(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${this.API}/upload/assignments`, formData, { withCredentials: true });
+  }
+
+  processAIIngest(text: string, type: string): Observable<any> {
+    return this.http.post<any>(`${this.API}/ingest-ai`, { text, type }, { withCredentials: true });
+  }
+
+  uploadBulkJSON(type: string, data: any[]): Observable<any> {
+    return this.http.post<any>(`${this.API}/upload/json/${type}`, { data }, { withCredentials: true });
+  }
+
+  downloadTemplate(filename: string): Observable<Blob> {
+    return this.http.get(`${this.API}/templates/${filename}`, {
+      responseType: 'blob',
+      withCredentials: true
+    });
+  }
 }

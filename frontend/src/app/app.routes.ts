@@ -16,6 +16,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/signup/signup.component').then(m => m.SignupComponent)
   },
+  {
+    path: 'reset-password',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
 
   // ── Protected: Admin portal (lazy)
   {

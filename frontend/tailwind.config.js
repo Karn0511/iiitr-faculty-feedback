@@ -11,8 +11,8 @@ module.exports = {
           100: '#e0e7ff',
           200: '#c7d2fe',
           300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',  // Primary indigo
+          400: 'var(--brand-400, #818cf8)',
+          500: 'var(--brand-500, #6366f1)',
           600: '#4f46e5',
           700: '#4338ca',
           800: '#3730a3',
@@ -20,10 +20,10 @@ module.exports = {
           950: '#1e1b4b',
         },
         surface: {
-          DEFAULT: '#0f172a',  // Dark background
-          card:    '#1e293b',
-          border:  '#334155',
-          hover:   '#253347',
+          DEFAULT: 'var(--surface-default, #0f172a)',
+          card:    'var(--surface-card, #1e293b)',
+          border:  'var(--surface-border, #334155)',
+          hover:   'var(--surface-hover, #253347)',
         }
       },
       fontFamily: {

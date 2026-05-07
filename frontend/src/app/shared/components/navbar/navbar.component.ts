@@ -20,7 +20,7 @@ interface NavItem {
         <div class="flex items-center justify-between h-16">
 
           <!-- Logo + Brand -->
-          <a routerLink="/" class="flex items-center gap-3 group">
+          <a [routerLink]="homeRoute()" class="flex items-center gap-3 group">
             <div class="w-9 h-9 flex items-center justify-center flex-shrink-0">
               <img src="/logo.png" class="w-8 h-8 object-contain rounded-lg" alt="IIIT Ranchi Logo" />
             </div>
@@ -111,6 +111,14 @@ export class NavbarComponent {
   readonly isLoggedIn = this.auth.isLoggedIn;
   readonly user       = this.auth.currentUser;
   readonly menuOpen   = signal(false);
+
+  readonly homeRoute = computed(() => {
+    const role = this.user()?.role;
+    if (role === 'Admin') return '/admin';
+    if (role === 'Faculty') return '/faculty';
+    if (role === 'Student') return '/student';
+    return '/login';
+  });
 
   readonly userInitial = computed(() => {
     const name = this.user()?.name ?? '';

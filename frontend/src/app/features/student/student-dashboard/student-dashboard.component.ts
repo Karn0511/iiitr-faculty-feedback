@@ -411,6 +411,7 @@ export class StudentDashboardComponent implements OnInit {
     const form = this.feedbackForm;
     if (!assign || !form || form.invalid) return;
 
+    this.triggerHapticFeedback(); // Dynamic haptics trigger
     this.submitting.set(true);
     this.submitError.set('');
     this.spinner.show();
@@ -432,6 +433,7 @@ export class StudentDashboardComponent implements OnInit {
       next: () => {
         this.submitting.set(false);
         this.spinner.hide();
+        this.triggerHapticFeedback(); // Success completion haptic click
 
         // 🎉 SUCCESS INTERACTIVE ANIMATIONS
         this.triggerConfetti();
@@ -515,5 +517,14 @@ export class StudentDashboardComponent implements OnInit {
     setTimeout(() => {
       container.remove();
     }, 4500);
+  }
+
+  async triggerHapticFeedback() {
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    } catch (err) {
+      // Gracefully bypass on browser
+    }
   }
 }

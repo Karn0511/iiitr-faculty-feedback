@@ -31,6 +31,14 @@ router.post('/upload/assignments',
     adminController.uploadCourseAssignments
 );
 
+// POST /api/admin/ingest-ai
+// Body: JSON { text: string, type: 'students' | 'faculty' | 'assignments' }
+router.post('/ingest-ai', adminController.processAIIngest);
+
+// POST /api/admin/upload/json/:type
+// Body: JSON { data: array }
+router.post('/upload/json/:type', adminController.uploadBulkJSON);
+
 // ============================================================
 // FEEDBACK SESSION MANAGEMENT
 // ============================================================
@@ -71,6 +79,8 @@ router.get('/leaderboard', adminController.getFacultyLeaderboard);
 router.post('/questions',       adminController.addQuestion);
 router.get('/questions',        adminController.getAllQuestions);
 router.patch('/questions/:id',  adminController.toggleQuestion);
+
+router.get('/templates/:filename', adminController.downloadTemplateFile);
 
 module.exports = router;
 

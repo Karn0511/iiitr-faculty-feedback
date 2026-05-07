@@ -55,12 +55,16 @@ const connectDB = async () => {
                 password: 'student123',
                 role: 'Student',
                 section: 'A',
+                rollNo: '2026-CS-42',
+                semester: 4,
                 isActive: true
             });
             console.log(`🌱 Seeded Student user: ${studentEmail}`);
         } else {
-            // Update password to be simple as requested
+            // Update password to be simple as requested and ensure required fields are populated
             studentExists.password = 'student123';
+            studentExists.rollNo = studentExists.rollNo || '2026-CS-42';
+            studentExists.semester = studentExists.semester || 4;
             await studentExists.save();
         }
 

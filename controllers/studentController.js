@@ -123,8 +123,18 @@ exports.getSubmissionStatus = async (req, res) => {
 // ============================================================
 exports.getAvailableCourses = async (req, res) => {
     try {
-        // All faculty-course-section assignments for this student's section
-        const assignments = await Assignment.find({ section: req.user.section })
+        // Safe-guard check: Ensure student is assigned to a section and semester
+        if (!req.user.section || !req.user.semester) {
+            return res.status(200).json({
+                success: true,
+                count:   0,
+                data:    { courses: [] },
+                message: 'No section or semester assigned. Please contact the administrator.'
+            });
+        }
+
+        // All faculty-course-section-semester assignments matching student's assignment exactly
+        const assignments = await Assignment.find({ section: req.user.section, semester: req.user.semester })
             .populate('courseId',  'courseName courseCode')
             .populate('facultyId', 'name email avatar')
             .lean();

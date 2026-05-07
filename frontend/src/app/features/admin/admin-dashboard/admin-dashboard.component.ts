@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService, AdminStats, FacultyLeaderboardItem, QuestionItem, FeedbackSessionItem } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -9,7 +9,10 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <!-- Global Mesh Background -->
+    <canvas #meshCanvas class="fixed inset-0 w-full h-full opacity-[0.1] mix-blend-screen pointer-events-none z-[-1]"></canvas>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in relative z-10">
 
       <!-- Header Banner -->
       <div class="relative overflow-hidden rounded-3xl bg-slate-950/60 border border-surface-border p-8 mb-8 shadow-glow flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -187,20 +190,229 @@ import { FormsModule } from '@angular/forms';
               </div>
             </div>
           </div>
+
+          <!-- SECTION 4: Bulk CSV Data Ingestion -->
+          <div class="glass-card p-6 sm:p-8 space-y-6">
+            <div class="pb-3 border-b border-surface-border flex items-center justify-between">
+              <div>
+                <h2 class="text-white font-extrabold text-base">Bulk CSV Data Ingestion</h2>
+                <p class="text-slate-400 text-xs mt-0.5">Import institutional mappings and users via CSV.</p>
+              </div>
+              <span class="text-xs font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded font-bold">CSV BULK</span>
+            </div>
+
+            <!-- Upload Tabs — Premium Glassmorphic Bar -->
+            <div class="tab-bar mb-5">
+              <button (click)="activeTab.set('students'); selectedFile.set(null); uploadResult.set(null);"
+                      class="tab-btn tab-brand"
+                      [class.tab-active]="activeTab() === 'students'">
+                🎓 Students
+              </button>
+              <button (click)="activeTab.set('faculty'); selectedFile.set(null); uploadResult.set(null);"
+                      class="tab-btn tab-emerald"
+                      [class.tab-active]="activeTab() === 'faculty'">
+                👨‍🏫 Faculty
+              </button>
+              <button (click)="activeTab.set('assignments'); selectedFile.set(null); uploadResult.set(null);"
+                      class="tab-btn tab-violet"
+                      [class.tab-active]="activeTab() === 'assignments'">
+                🔗 Assignments
+              </button>
+            </div>
+
+            <!-- Ingestion instructions & required headers -->
+            <div class="bg-slate-950/40 border border-surface-border p-4 rounded-xl space-y-2 mb-4">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[10px] font-mono text-slate-500 block uppercase font-bold">Required Format &amp; Headers</span>
+                <div class="tab-bar" style="padding:3px; border-radius:12px; gap:2px;">
+                  <button type="button" (click)="ingestMode.set('csv')"
+                          class="tab-btn tab-brand" style="padding:5px 12px; border-radius:9px; font-size:9px;"
+                          [class.tab-active]="ingestMode() === 'csv'">📄 CSV</button>
+                  <button type="button" (click)="ingestMode.set('ai')"
+                          class="tab-btn tab-emerald" style="padding:5px 12px; border-radius:9px; font-size:9px;"
+                          [class.tab-active]="ingestMode() === 'ai'">✨ AI Text</button>
+                </div>
+              </div>
+              
+              <div *ngIf="activeTab() === 'students'" class="space-y-1">
+                <div class="flex items-center justify-between">
+                  <p class="text-[11px] text-slate-300 font-medium">Headers: <span class="font-mono text-brand-300 font-bold">[Name, Email, RollNo, Section, Semester]</span></p>
+                  <button (click)="downloadTemplate('students')" class="text-[9px] font-bold text-brand-400 hover:text-brand-300 underline uppercase bg-transparent border-none p-0 cursor-pointer">📥 Sample CSV</button>
+                </div>
+                <p class="text-[10px] text-slate-500 leading-relaxed">Imports student accounts and generates a default password: <span class="text-emerald-400 font-semibold">IIITR&#64;2026</span></p>
+              </div>
+
+              <div *ngIf="activeTab() === 'faculty'" class="space-y-1">
+                <div class="flex items-center justify-between">
+                  <p class="text-[11px] text-slate-300 font-medium">Headers: <span class="font-mono text-brand-300 font-bold">[Name, Email]</span></p>
+                  <button (click)="downloadTemplate('faculty')" class="text-[9px] font-bold text-emerald-400 hover:text-emerald-300 underline uppercase bg-transparent border-none p-0 cursor-pointer">📥 Sample CSV</button>
+                </div>
+                <p class="text-[10px] text-slate-500 leading-relaxed">Imports faculty accounts and generates default email local-part password.</p>
+              </div>
+
+              <div *ngIf="activeTab() === 'assignments'" class="space-y-1">
+                <div class="flex items-center justify-between">
+                  <p class="text-[11px] text-slate-300 font-medium">Headers: <span class="font-mono text-brand-300 font-bold">[FacultyEmail, CourseCode, Section, Semester]</span></p>
+                  <button (click)="downloadTemplate('assignments')" class="text-[9px] font-bold text-violet-400 hover:text-violet-300 underline uppercase bg-transparent border-none p-0 cursor-pointer">📥 Sample CSV</button>
+                </div>
+                <p class="text-[10px] text-slate-500 leading-relaxed">Establishes faculty-course assignments with the database Relational Linker.</p>
+              </div>
+            </div>
+
+            <ng-container *ngIf="ingestMode() === 'csv'">
+              <!-- Hidden File Input -->
+              <input #csvFileRef id="csvFileInput" type="file" class="sr-only" accept=".csv" (change)="onFileSelected($event)" />
+
+              <!-- Drop Zone -->
+              <div class="border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 relative mb-4 select-none"
+                   [ngClass]="{
+                     'border-brand-500 bg-brand-500/5': isDragOver(),
+                     'border-slate-700 bg-slate-950/20 hover:border-brand-500/40': !isDragOver()
+                   }"
+                   (click)="csvFileRef.click()"
+                   (dragover)="$event.preventDefault(); $event.stopPropagation(); isDragOver.set(true)"
+                   (dragleave)="$event.preventDefault(); $event.stopPropagation(); isDragOver.set(false)"
+                   (dragenter)="$event.preventDefault(); $event.stopPropagation(); isDragOver.set(true)"
+                   (drop)="onFileDrop($event)">
+                <div class="space-y-2 pointer-events-none">
+                  <span class="text-3xl block">{{ isDragOver() ? '🎯' : '📥' }}</span>
+                  <span class="text-xs font-semibold text-slate-300 block">
+                    {{ selectedFile() ? selectedFile()?.name : (isDragOver() ? 'Drop your CSV file here!' : 'Drag & drop or click to select CSV file') }}
+                  </span>
+                  <span *ngIf="selectedFile()" class="text-[10px] text-slate-500 font-mono block">
+                    Size: {{ (selectedFile()?.size || 0) / 1024 | number:'1.1-1' }} KB
+                  </span>
+                </div>
+              </div>
+
+              <!-- Upload and Reset buttons -->
+              <div class="flex gap-3 mb-4">
+                <button type="button" (click)="selectedFile() ? onUpload() : csvFileRef.click()" class="btn-primary py-2.5 px-5 text-xs font-bold uppercase tracking-wider flex-1" 
+                        [disabled]="uploading()">
+                  <span *ngIf="uploading()">UPLOADING...</span>
+                  <span *ngIf="!uploading() && !selectedFile()">📂 SELECT FILE</span>
+                  <span *ngIf="!uploading() && selectedFile()">UPLOAD DATA</span>
+                </button>
+                <button type="button" *ngIf="selectedFile()" (click)="selectedFile.set(null); uploadResult.set(null);" 
+                        class="btn-ghost py-2.5 px-3 text-xs font-bold uppercase tracking-wider">
+                  RESET
+                </button>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="ingestMode() === 'ai'">
+              <div class="mb-4">
+                <textarea [(ngModel)]="aiRawText" placeholder="Paste unstructured raw data here (e.g. from an email, PDF, or message) and let Gemini figure out the JSON structure..." 
+                          class="w-full h-32 p-4 rounded-xl bg-slate-950/50 border border-slate-700 text-xs font-mono text-slate-300 focus:outline-none focus:border-brand-500 transition-colors resize-none"></textarea>
+              </div>
+
+              <div class="flex gap-3 mb-4">
+                <button (click)="$event.stopPropagation(); onProcessAIIngest();" class="btn-primary py-2.5 px-5 text-xs font-bold uppercase tracking-wider flex-1 flex items-center justify-center gap-2" 
+                        [disabled]="!aiRawText || processingAI()">
+                  <svg *ngIf="processingAI()" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  <span *ngIf="processingAI()">Gemini is structuring...</span>
+                  <span *ngIf="!processingAI()">✨ Extract Structure</span>
+                </button>
+                <button *ngIf="aiRawText" (click)="$event.stopPropagation(); aiRawText=''; aiPreviewData.set([]); uploadResult.set(null);" 
+                        class="btn-ghost py-2.5 px-3 text-xs font-bold uppercase tracking-wider">
+                  CLEAR
+                </button>
+              </div>
+
+              <!-- AI Preview Table -->
+              <div *ngIf="aiPreviewData() && aiPreviewData().length > 0" class="bg-slate-950/60 rounded-xl border border-brand-500/30 mb-4 overflow-hidden animate-fade-in">
+                <div class="px-4 py-3 border-b border-brand-500/20 bg-brand-500/10 flex items-center justify-between">
+                  <span class="text-[10px] font-black uppercase tracking-wider text-brand-300">AI Preview & Edit ({{ aiPreviewData().length }} records)</span>
+                </div>
+                <div class="max-h-60 overflow-y-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-900/50 text-slate-400 font-mono text-[9px] uppercase tracking-wider sticky top-0">
+                      <tr>
+                        <th *ngFor="let key of getObjectKeys(aiPreviewData()[0])" class="px-3 py-2 border-b border-slate-800">{{ key }}</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                      <tr *ngFor="let item of aiPreviewData(); let i = index" class="hover:bg-slate-800/30 transition-colors">
+                        <td *ngFor="let key of getObjectKeys(item)" class="px-3 py-2 font-mono text-[10px]">
+                          <input [(ngModel)]="item[key]" class="w-full bg-transparent border-none outline-none focus:bg-slate-800 focus:ring-1 focus:ring-brand-500 rounded px-1 py-0.5 text-slate-300">
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="p-3 bg-slate-900/50 border-t border-slate-800 flex justify-end">
+                  <button (click)="$event.stopPropagation(); onFinalizeAI();" class="btn-primary py-2 px-6 text-[10px] font-black uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 !shadow-emerald-500/30">
+                    <span *ngIf="uploading()">Finalizing...</span>
+                    <span *ngIf="!uploading()">Finalize to DB</span>
+                  </button>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Response Alert -->
+            <div *ngIf="uploadResult()" class="p-4 rounded-xl border animate-fade-in"
+                 [ngClass]="uploadResult()?.success ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400' : 'border-rose-500/30 bg-rose-500/5 text-rose-400'">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-extrabold tracking-wider uppercase font-mono">
+                  {{ uploadResult()?.success ? 'UPLOAD SUCCESSFUL' : 'UPLOAD WITH NOTICES' }}
+                </span>
+                <button (click)="uploadResult.set(null)" class="text-[10px] font-mono font-bold hover:underline bg-transparent text-slate-400 border-none cursor-pointer">DISMISS</button>
+              </div>
+              <p class="text-[11px] leading-relaxed mb-2">{{ uploadResult()?.message }}</p>
+              <div class="text-[10px] font-mono grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-800">
+                <div>Total Rows: <span class="text-white font-bold">{{ uploadResult()?.total }}</span></div>
+                <div>Inserted: <span class="text-emerald-400 font-bold">{{ uploadResult()?.inserted }}</span></div>
+                <div>Skipped: <span class="text-amber-400 font-bold">{{ uploadResult()?.skipped || 0 }}</span></div>
+              </div>
+              <!-- Validation Errors -->
+              <div *ngIf="uploadResult()?.validationErrors && uploadResult()?.validationErrors.length > 0" class="mt-3 space-y-1">
+                <span class="text-[9px] font-bold uppercase text-rose-400 block tracking-wider">Validation Errors:</span>
+                <div class="max-h-[100px] overflow-y-auto pr-1 space-y-1 text-[9px] font-mono text-slate-400">
+                  <div *ngFor="let err of uploadResult()?.validationErrors">
+                    Row {{ err.row }}: {{ err.reason }} ({{ err.email || 'N/A' }})
+                  </div>
+                </div>
+              </div>
+              <!-- Duplicates -->
+              <div *ngIf="uploadResult()?.duplicates && uploadResult()?.duplicates.length > 0" class="mt-3 space-y-1">
+                <span class="text-[9px] font-bold uppercase text-amber-400 block tracking-wider">Duplicates Skipped:</span>
+                <div class="max-h-[100px] overflow-y-auto pr-1 space-y-1 text-[9px] font-mono text-slate-400">
+                  <div *ngFor="let dup of uploadResult()?.duplicates">
+                    Row {{ dup.row || 'N/A' }} - {{ dup.email || 'N/A' }}: {{ dup.reason }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
     </div>
   `
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, AfterViewInit {
   auth         = inject(AuthService);
   adminService = inject(AdminService);
+  
+  @ViewChild('meshCanvas') meshCanvas!: ElementRef<HTMLCanvasElement>;
 
   stats        = signal<AdminStats | null>(null);
   leaderboard  = signal<FacultyLeaderboardItem[]>([]);
   questions    = signal<QuestionItem[]>([]);
   sessions     = signal<FeedbackSessionItem[]>([]);
+
+  // CSV Bulk Ingestion Signals
+  activeTab    = signal<'students' | 'faculty' | 'assignments'>('students');
+  ingestMode   = signal<'csv' | 'ai'>('csv');
+  selectedFile = signal<File | null>(null);
+  uploading    = signal<boolean>(false);
+  uploadResult = signal<any | null>(null);
+  isDragOver   = signal<boolean>(false);
+
+  // AI Ingest Signals
+  aiRawText      = '';
+  processingAI   = signal<boolean>(false);
+  aiPreviewData  = signal<any[]>([]);
 
   // Add Question Input
   newQuestionText = '';
@@ -210,8 +422,110 @@ export class AdminDashboardComponent implements OnInit {
   sessionStart = '';
   sessionEnd = '';
 
+  getObjectKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
+  }
+
+  downloadTemplate(type: 'students' | 'faculty' | 'assignments') {
+    let csvContent = '';
+    let filename = '';
+    
+    if (type === 'students') {
+      csvContent = [
+        'Name,Email,RollNo,Section,Semester',
+        'Rahul Sharma,rahul.sharma@iiitr.ac.in,2021BCS001,A,5',
+        'Priya Singh,priya.singh@iiitr.ac.in,2021BCS002,A,5',
+        'Amit Kumar,amit.kumar@iiitr.ac.in,2021BCS003,B,5',
+        'Sneha Patel,sneha.patel@iiitr.ac.in,2022BCS001,A,3',
+        'Rohit Verma,rohit.verma@iiitr.ac.in,2022BCS002,B,3'
+      ].join('\r\n');
+      filename = 'students_template.csv';
+    } else if (type === 'faculty') {
+      csvContent = [
+        'Name,Email',
+        'Dr. Rajesh Gupta,rajesh.gupta@iiitr.ac.in',
+        'Prof. Anita Sharma,anita.sharma@iiitr.ac.in',
+        'Dr. Suresh Mehta,suresh.mehta@iiitr.ac.in',
+        'Prof. Kavita Rao,kavita.rao@iiitr.ac.in'
+      ].join('\r\n');
+      filename = 'faculty_template.csv';
+    } else if (type === 'assignments') {
+      csvContent = [
+        'FacultyEmail,CourseCode,Section,Semester',
+        'rajesh.gupta@iiitr.ac.in,CS101,A,5',
+        'rajesh.gupta@iiitr.ac.in,CS102,B,5',
+        'anita.sharma@iiitr.ac.in,CS201,A,3',
+        'suresh.mehta@iiitr.ac.in,CS301,A,5'
+      ].join('\r\n');
+      filename = 'assignments_template.csv';
+    }
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   ngOnInit() {
     this.fetchGlobalData();
+  }
+
+  ngAfterViewInit() {
+    this.initMeshShader();
+  }
+
+  // ==========================================
+  // CANVAS MESH SHADER LOGIC
+  // ==========================================
+  initMeshShader() {
+    if (!this.meshCanvas) return;
+    const canvas = this.meshCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let time = 0;
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    const draw = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      time += 0.001; // Slower ambient movement for Admin
+
+      const drawBlob = (xOffset: number, yOffset: number, rBase: number, color: string, speed: number) => {
+        const x = canvas.width/2 + Math.sin(time * speed + xOffset) * canvas.width * 0.4;
+        const y = canvas.height/2 + Math.cos(time * speed * 1.3 + yOffset) * canvas.height * 0.4;
+        const radius = rBase + Math.sin(time * speed * 2) * rBase * 0.1;
+
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      };
+
+      const isCyber = document.documentElement.classList.contains('theme-cyber');
+      
+      // Indigo blob
+      drawBlob(0, 0, Math.max(canvas.width, canvas.height) * 0.7, 
+               isCyber ? 'rgba(99, 102, 241, 0.4)' : 'rgba(37, 99, 235, 0.3)', 1.2);
+      // Emerald / Purple blob
+      drawBlob(2, 1, Math.max(canvas.width, canvas.height) * 0.6, 
+               isCyber ? 'rgba(16, 185, 129, 0.3)' : 'rgba(168, 85, 247, 0.3)', 0.8);
+
+      requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
   }
 
   fetchGlobalData() {
@@ -290,6 +604,141 @@ export class AdminDashboardComponent implements OnInit {
         this.sessions.update(items =>
           items.map(s => s._id === sid ? { ...s, isOpen: !s.isOpen } : s)
         );
+      }
+    });
+  }
+
+  // ============================================================
+  // CSV DATA BULK INGESTION HANDLERS
+  // ============================================================
+  onFileSelected(event: Event) {
+    const element = event.currentTarget as HTMLInputElement;
+    const fileList = element.files;
+    if (fileList && fileList.length > 0) {
+      this.selectedFile.set(fileList[0]);
+      this.uploadResult.set(null);
+    }
+  }
+
+  onFileDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver.set(false);
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.name.endsWith('.csv') || file.type === 'text/csv' || file.type === 'application/vnd.ms-excel') {
+        this.selectedFile.set(file);
+        this.uploadResult.set(null);
+      } else {
+        this.uploadResult.set({ success: false, message: 'Only CSV files are accepted. Please drop a .csv file.' });
+      }
+    }
+  }
+
+  onUpload() {
+    const file = this.selectedFile();
+    if (!file) return;
+
+    this.uploading.set(true);
+    this.uploadResult.set(null);
+
+    const tab = this.activeTab();
+    let upload$ = this.adminService.uploadStudents(file);
+
+    if (tab === 'faculty') {
+      upload$ = this.adminService.uploadFaculty(file);
+    } else if (tab === 'assignments') {
+      upload$ = this.adminService.uploadAssignments(file);
+    }
+
+    upload$.subscribe({
+      next: (res) => {
+        this.uploading.set(false);
+        this.selectedFile.set(null);
+        this.uploadResult.set({
+          success: true,
+          message: res.message || 'CSV file uploaded and parsed successfully!',
+          total: res.total || 0,
+          inserted: res.inserted || 0,
+          skipped: res.skipped,
+          validationErrors: res.validationErrors,
+          duplicates: res.duplicates
+        });
+        // Re-fetch global stats to update student counts
+        this.fetchGlobalData();
+      },
+      error: (err) => {
+        this.uploading.set(false);
+        const errorMsg = err.error?.message || 'An error occurred during file ingestion.';
+        this.uploadResult.set({
+          success: false,
+          message: errorMsg,
+          total: err.error?.total || 0,
+          inserted: err.error?.inserted || 0,
+          skipped: err.error?.skipped || 0,
+          validationErrors: err.error?.validationErrors || [],
+          duplicates: err.error?.duplicates || []
+        });
+      }
+    });
+  }
+
+  // ============================================================
+  // AI DATA BULK INGESTION HANDLERS
+  // ============================================================
+  onProcessAIIngest() {
+    if (!this.aiRawText.trim()) return;
+
+    this.processingAI.set(true);
+    this.uploadResult.set(null);
+    this.aiPreviewData.set([]);
+
+    this.adminService.processAIIngest(this.aiRawText, this.activeTab()).subscribe({
+      next: (res) => {
+        this.processingAI.set(false);
+        if (res.success && res.data && Array.isArray(res.data)) {
+          this.aiPreviewData.set(res.data);
+        }
+      },
+      error: (err) => {
+        this.processingAI.set(false);
+        this.uploadResult.set({
+          success: false,
+          message: 'Gemini extraction failed: ' + (err.error?.message || err.message)
+        });
+      }
+    });
+  }
+
+  onFinalizeAI() {
+    const data = this.aiPreviewData();
+    if (!data || data.length === 0) return;
+
+    this.uploading.set(true);
+    this.uploadResult.set(null);
+
+    this.adminService.uploadBulkJSON(this.activeTab(), data).subscribe({
+      next: (res) => {
+        this.uploading.set(false);
+        this.aiRawText = '';
+        this.aiPreviewData.set([]);
+        
+        this.uploadResult.set({
+          success: true,
+          message: res.message || 'AI JSON Bulk Upload successful!',
+          total: res.total || 0,
+          inserted: res.inserted || 0,
+          validationErrors: res.errors || []
+        });
+        this.fetchGlobalData();
+      },
+      error: (err) => {
+        this.uploading.set(false);
+        this.uploadResult.set({
+          success: false,
+          message: err.error?.message || 'Bulk Insert Failed'
+        });
       }
     });
   }

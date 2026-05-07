@@ -21,9 +21,10 @@ const signToken = (user) => {
 const sendTokenResponse = (user, statusCode, res, message = 'Authentication successful') => {
     const token = signToken(user);
 
+    const expireDays = parseInt(process.env.JWT_EXPIRES_IN) || 1;
     const cookieOptions = {
-        expires:  new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-        httpOnly: true, // Not accessible via JS — XSS protection
+        expires:  new Date(Date.now() + expireDays * 24 * 60 * 60 * 1000), // Dynamic matching
+        httpOnly: true, // Not accessible via JS — XSS protection (Auto-accepted by browser, no frontend prompt needed)
         secure:   process.env.NODE_ENV === 'production',       // HTTPS only in prod
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     };
@@ -41,7 +42,8 @@ const sendTokenResponse = (user, statusCode, res, message = 'Authentication succ
                 email: user.email,
                 role:  user.role,
                 section: user.section || null,
-                avatar:  user.avatar  || null
+                avatar:  user.avatar  || null,
+                requiresPasswordChange: user.requiresPasswordChange
             }
         }
     });
@@ -55,9 +57,10 @@ exports.loginSuccessHandler = (req, res) => {
 
     const token = signToken(req.user);
 
+    const expireDays = parseInt(process.env.JWT_EXPIRES_IN) || 1;
     const cookieOptions = {
-        expires:  new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-        httpOnly: true,
+        expires:  new Date(Date.now() + expireDays * 24 * 60 * 60 * 1000), // Dynamic matching
+        httpOnly: true, // Not accessible via JS — XSS protection (Auto-accepted by browser, no frontend prompt needed)
         secure:   process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     };
@@ -70,7 +73,8 @@ exports.loginSuccessHandler = (req, res) => {
         email:   req.user.email,
         role:    req.user.role,
         section: req.user.section || null,
-        avatar:  req.user.avatar  || null
+        avatar:  req.user.avatar  || null,
+        requiresPasswordChange: req.user.requiresPasswordChange
     }));
 
     // Redirect to frontend app login route to consume token and user variables
@@ -207,6 +211,32 @@ exports.getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         res.status(200).json({ success: true, data: { user } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ============================================================
+// CHANGE PASSWORD (forces requiresPasswordChange to false)
+// ============================================================
+exports.changePassword = async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 6 characters long' });
+        }
+
+        const user = await User.findById(req.user.id).select('+password');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        user.password = newPassword;
+        user.requiresPasswordChange = false;
+        await user.save(); // this will trigger the pre-save hook to hash the new password
+
+        // Issue a new token response
+        sendTokenResponse(user, 200, res, 'Password updated successfully');
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

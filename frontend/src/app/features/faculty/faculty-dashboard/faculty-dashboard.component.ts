@@ -30,7 +30,7 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
           <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 text-2xl font-bold">🏫</div>
           <div>
             <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Academic Session</div>
-            <div class="text-sm font-extrabold text-white">Spring 2026 Term</div>
+            <div class="text-sm font-extrabold text-white">{{ currentSession() }}</div>
           </div>
         </div>
       </div>
@@ -383,6 +383,13 @@ export class FacultyDashboardComponent implements OnInit {
   facultyService = inject(FacultyService);
   private toastr = inject(ToastrService);
   private spinner = inject(SpinnerService);
+
+  readonly currentSession = computed(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    return month < 6 ? `Spring ${year} Term` : `Autumn ${year} Term`;
+  });
 
   // Core States
   courses        = signal<FacultyStats[]>([]);

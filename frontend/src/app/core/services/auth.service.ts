@@ -11,6 +11,7 @@ export interface AuthUser {
   role:    'Admin' | 'Faculty' | 'Student';
   section: string | null;
   avatar:  string | null;
+  requiresPasswordChange?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -42,6 +43,11 @@ export class AuthService {
     window.location.href = `${environment.apiUrl}/auth/google`;
   }
 
+  changePassword(newPassword: string) {
+    return this.http.put<any>(`${this.API}/change-password`, { newPassword }, { withCredentials: true })
+      .pipe(tap(res => this.handleAuthSuccess(res)));
+  }
+
   logout() {
     this.http.get(`${this.API}/logout`, { withCredentials: true }).subscribe();
     this._user.set(null);
@@ -67,6 +73,12 @@ export class AuthService {
   }
 
   redirectByRole() {
+    const user = this._user();
+    if (user?.requiresPasswordChange) {
+      this.router.navigate(['/reset-password']);
+      return;
+    }
+    
     const role = this.userRole();
     const map: Record<string, string> = { Admin: '/admin', Faculty: '/faculty', Student: '/student' };
     this.router.navigate([map[role ?? ''] ?? '/login']);

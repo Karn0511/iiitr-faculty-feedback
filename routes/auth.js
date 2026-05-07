@@ -62,8 +62,9 @@ router.get('/google/failure', (req, res) => {
 });
 
 // ============================================================
-// PROTECTED: Current user info
+// PROTECTED: Current user info & Password Management
 // ============================================================
 router.get('/me', protect, authController.getMe);
+router.put('/change-password', protect, authController.changePassword);
 
 module.exports = router;

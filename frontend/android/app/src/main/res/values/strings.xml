@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">IIITR Faculty Feedback</string>
+    <string name="title_activity_main">IIITR Faculty Feedback</string>
+    <string name="package_name">com.iiitr.feedback</string>
+    <string name="custom_url_scheme">com.iiitr.feedback</string>
+</resources>

@@ -10,7 +10,7 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule],
   template: `
-    <div class="min-h-screen w-full flex items-center justify-center relative p-4 sm:p-6 overflow-hidden bg-surface">
+    <div class="min-h-screen w-full flex items-center justify-center relative p-4 sm:p-6 overflow-y-auto py-12 bg-surface">
 
       <!-- Background design -->
       <div class="absolute inset-0 pointer-events-none overflow-hidden">

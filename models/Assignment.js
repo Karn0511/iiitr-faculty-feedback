@@ -15,12 +15,16 @@ const assignmentSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Section is required'],
         trim: true
+    },
+    semester: {
+        type: Number,
+        required: [true, 'Semester is required']
     }
 }, {
     timestamps: true
 });
 
-// Compound index to prevent duplicate assignments for the same section and course
-assignmentSchema.index({ facultyId: 1, courseId: 1, section: 1 }, { unique: true });
+// Compound index to prevent duplicate assignments for the same section, course, and semester
+assignmentSchema.index({ facultyId: 1, courseId: 1, section: 1, semester: 1 }, { unique: true });
 
 module.exports = mongoose.model('Assignment', assignmentSchema);

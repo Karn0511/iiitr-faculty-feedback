@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -16,20 +16,21 @@ interface CarouselSlide {
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule],
   template: `
-    <div class="min-h-screen w-full flex items-center justify-center relative p-4 sm:p-6 overflow-hidden bg-[#020617] text-slate-200">
+    <div class="min-h-screen w-full flex items-center justify-center relative p-4 sm:p-6 overflow-y-auto py-12 bg-[#020617] text-slate-200">
 
-      <!-- 1. Immersive aurora background grid and floating blobs -->
+      <!-- 1. Immersive aurora background grid and floating blobs with Mesh Shader -->
       <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <canvas #meshCanvas class="absolute inset-0 w-full h-full opacity-[0.15] mix-blend-screen"></canvas>
         <div class="bg-grid"></div>
         <div class="aurora-blob top-0 left-0"></div>
         <div class="aurora-blob-2 bottom-0 right-0"></div>
       </div>
 
       <!-- Main Dual Pane Glass Panel Container -->
-      <div class="w-full max-w-[1200px] min-h-[700px] lg:h-[750px] grid lg:grid-cols-12 glass-panel rounded-3xl overflow-hidden relative z-10 animate-fade-in shadow-2xl shadow-black/60">
+      <div class="w-full max-w-[1200px] min-h-[600px] md:min-h-[720px] h-auto grid md:grid-cols-12 glass-panel rounded-3xl overflow-hidden relative z-10 animate-fade-in shadow-2xl shadow-black/60">
 
         <!-- LEFT SIDE: Spinning Tech Rings & Animated Brand Carousel -->
-        <div class="hidden lg:flex lg:col-span-5 flex-col justify-between p-12 relative overflow-hidden bg-slate-950/40 border-r border-slate-800/40 z-10">
+        <div class="hidden md:flex md:col-span-5 flex-col justify-between p-8 xl:p-12 relative overflow-hidden bg-slate-950/40 border-r border-slate-800/40 z-10">
           <div class="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-brand-600/10 blur-[60px] pointer-events-none"></div>
 
           <!-- Institutional Header branding -->
@@ -43,19 +44,41 @@ interface CarouselSlide {
             </div>
           </div>
 
-          <!-- Tech spinning concentric rings visualizer -->
-          <div class="relative z-10 flex-1 flex flex-col justify-center items-center text-center py-6">
-            <div class="relative w-52 h-52 mb-8 flex items-center justify-center">
-              <div class="absolute inset-0 border border-brand-500/25 rounded-full spin-reverse" style="animation-duration: 20s;"></div>
-              <div class="absolute inset-4 border border-violet-500/15 rounded-full spin-fast" style="animation-duration: 12s;"></div>
-              <div class="absolute inset-8 border border-dashed border-cyan-500/20 rounded-full spin-reverse" style="animation-duration: 8s;"></div>
+          <!-- Tech spinning concentric rings visualizer (Separated Sibling 1) -->
+          <div class="relative z-10 flex flex-col items-center justify-center text-center py-2">
+            <div class="relative w-40 h-40 lg:w-48 lg:h-48 xl:w-56 xl:h-56 shrink-0 flex items-center justify-center">
               
-              <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 flex items-center justify-center shadow-2xl p-4">
-                <img src="/logo.png" class="w-16 h-16 object-contain hover:scale-105 transition-all duration-300" alt="IIIT Ranchi Emblem" />
+              <!-- Large Outer Boundary Ring (like the text border in the real logo) -->
+              <div class="absolute w-52 h-52 lg:w-60 lg:h-60 xl:w-72 xl:h-72 rounded-full border-[1px] border-slate-700/50 flex items-center justify-center pointer-events-none z-0">
+                <div class="absolute inset-0 rounded-full border-[1px] border-dashed border-slate-500/30 spin-reverse" style="animation-duration: 40s;"></div>
+                <div class="absolute inset-[-10px] rounded-full border-[1px] border-dotted border-slate-600/40 spin-fast" style="animation-duration: 60s;"></div>
+              </div>
+              <!-- 3D Atomic Orbits -->
+              <div class="orbit-container absolute inset-0">
+                <!-- Red Orbit -->
+                <div class="orbit orbit-1"></div>
+                <!-- Green Orbit -->
+                <div class="orbit orbit-2"></div>
+                <!-- Blue Orbit with binary bits -->
+                <div class="orbit orbit-3">
+                  <div class="orbit-dot" style="top: -2px; left: 50%;"><span class="orbit-text">1</span></div>
+                  <div class="orbit-dot" style="top: 20%; left: 88%;"><span class="orbit-text">0</span></div>
+                  <div class="orbit-dot" style="top: 80%; left: 88%;"><span class="orbit-text">1</span></div>
+                  <div class="orbit-dot" style="top: 80%; left: 12%;"><span class="orbit-text">0</span></div>
+                </div>
+              </div>
+              
+              <!-- Refined Floating Center Logo -->
+              <div class="relative z-20 w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.3)] p-3 backdrop-blur-md">
+                <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                  <img src="/logo.png" class="w-10 h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 object-contain hover:scale-110 transition-transform duration-500" alt="IIIT Ranchi Emblem" />
+                </div>
               </div>
             </div>
+          </div>
 
-            <!-- Carousel Slider texts -->
+          <!-- Carousel Slider texts & Dots (Separated Sibling 2) -->
+          <div class="relative z-10 flex flex-col items-center text-center py-2">
             <div class="max-w-xs transition-all duration-500 min-h-[110px]">
               <h3 class="text-lg font-black text-white leading-snug mb-1.5">{{ activeSlide().title }}</h3>
               <p class="text-brand-400 font-bold text-[10px] uppercase tracking-wider mb-2">{{ activeSlide().subtitle }}</p>
@@ -86,7 +109,32 @@ interface CarouselSlide {
         </div>
 
         <!-- RIGHT SIDE: Integrated Auth Panel / Portal -->
-        <div class="lg:col-span-7 flex flex-col justify-center p-6 sm:p-12 md:p-16 bg-slate-900/10 backdrop-blur-sm z-10 relative">
+        <div class="col-span-12 md:col-span-7 flex flex-col justify-center p-6 sm:p-10 md:p-12 lg:p-16 bg-slate-900/10 backdrop-blur-sm z-10 relative">
+
+          <!-- Mobile Logo & 3D Orbits (only visible on mobile/tablet below md) -->
+          <div class="md:hidden flex flex-col items-center justify-center mb-6 mt-2">
+            <div class="relative w-32 h-32 shrink-0 mb-3 flex items-center justify-center">
+              
+              <!-- Compact 3D Orbits -->
+              <div class="orbit-container absolute inset-0" style="perspective: 800px; transform: scale(0.65);">
+                <div class="orbit orbit-1" style="inset: -4px;"></div>
+                <div class="orbit orbit-2" style="inset: -4px;"></div>
+                <div class="orbit orbit-3" style="inset: -4px;">
+                  <div class="orbit-dot" style="top: -2px; left: 50%; width: 3px; height: 3px;"><span class="orbit-text" style="font-size: 8px; top: -10px;">1</span></div>
+                  <div class="orbit-dot" style="top: 20%; left: 88%; width: 3px; height: 3px;"><span class="orbit-text" style="font-size: 8px; top: -10px;">0</span></div>
+                </div>
+              </div>
+              
+              <!-- Compact Floating Center Logo -->
+              <div class="relative z-20 w-14 h-14 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-md p-1.5 backdrop-blur-sm">
+                <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                  <img src="/logo.png" class="w-9 h-9 object-contain" alt="IIIT Ranchi Logo" />
+                </div>
+              </div>
+            </div>
+            <h2 class="text-white font-black text-sm uppercase tracking-tight text-center leading-none">IIIT Ranchi</h2>
+            <span class="text-brand-400 text-[8px] font-black tracking-widest uppercase mt-1 leading-none">Faculty Feedback System</span>
+          </div>
 
           <!-- A. PORTAL ROLE SELECTOR VIEW (If selectedRole is null) -->
           <div *ngIf="selectedRole() === null" class="space-y-8 animate-fade-in">
@@ -98,7 +146,7 @@ interface CarouselSlide {
 
             <!-- Grid displaying the three role button cards -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-2">
-              
+
               <!-- Card: Student -->
               <div (click)="selectRole('student')"
                    class="group relative bg-slate-950/40 border border-slate-800 rounded-2xl p-6 cursor-pointer hover:border-brand-500/40 hover:bg-brand-500/5 transition-all duration-300 hover:-translate-y-1.5 overflow-hidden flex flex-col justify-between min-h-[180px]">
@@ -151,7 +199,7 @@ interface CarouselSlide {
 
           <!-- B. SELECTED PORTAL SIGN IN PANEL (If selectedRole is NOT null) -->
           <div *ngIf="selectedRole() as role" class="space-y-6 animate-scale-in">
-            
+
             <!-- Category Title Header and back link -->
             <div class="flex items-center justify-between">
               <button (click)="selectRole(null)" class="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 uppercase tracking-wider">
@@ -179,17 +227,17 @@ interface CarouselSlide {
             <div class="p-4 rounded-2xl border border-dashed border-brand-500/25 bg-brand-500/5">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-[10px] font-bold text-brand-300 uppercase tracking-wider flex items-center gap-1.5">
-                  🔑 Sandbox Credentials profile
+                  🔑 Sandbox Credentials Profile
                 </span>
-                <span class="text-[9px] bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded-full font-bold">Auto-Seed</span>
+                <span class="text-[9px] bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded-full font-bold">🎲 Random</span>
               </div>
               <button (click)="useDemoProfile(role)"
-                      class="w-full flex items-center justify-between p-3 rounded-xl border border-slate-800/60 bg-slate-950/60 hover:bg-slate-900/60 hover:border-brand-500/30 transition-all text-left">
-                <div>
-                  <div class="text-xs font-bold text-white uppercase">{{ role }} sandbox account</div>
-                  <div class="text-[10px] text-slate-400 font-mono mt-0.5">{{ role }}&#64;iiitranchi.ac.in</div>
+                      class="w-full flex items-center justify-between p-3 rounded-xl border border-slate-800/60 bg-slate-950/60 hover:bg-slate-900/60 hover:border-brand-500/30 transition-all text-left group">
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white uppercase truncate">{{ sandboxLabel() }}</div>
+                  <div class="text-[10px] text-slate-500 font-mono mt-0.5">Tap again to shuffle ↺</div>
                 </div>
-                <span class="text-[10px] font-black text-brand-400 uppercase tracking-widest">TAP TO AUTOFill ➔</span>
+                <span class="text-[10px] font-black text-brand-400 uppercase tracking-widest flex-shrink-0 ml-3 group-hover:text-brand-300 transition-colors">TAP TO AUTOFILL ➔</span>
               </button>
             </div>
 
@@ -298,8 +346,8 @@ interface CarouselSlide {
               </button>
             </form>
 
-            <!-- Role specific Google oauth redirect - Only for students -->
-            <div *ngIf="role === 'student'" class="space-y-4">
+            <!-- Role specific Google oauth redirect - Only for faculty -->
+            <div *ngIf="role === 'faculty'" class="space-y-4">
               <div class="flex items-center gap-3">
                 <div class="flex-1 h-px bg-slate-800"></div>
                 <span class="text-slate-500 text-[9px] font-black uppercase tracking-widest">Or login with</span>
@@ -327,42 +375,88 @@ interface CarouselSlide {
         </div>
       </div>
 
-      <!-- C. FUTURISTIC TECH BOOT SCREEN OVERLAY -->
+      <!-- C. PREMIUM BOOT SCREEN OVERLAY -->
       <div *ngIf="isBootingApp"
-           class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center transition-all duration-500">
-        
-        <!-- Spinning Tech Boot circles -->
-        <div class="relative w-32 h-32 mb-8 flex items-center justify-center">
-          <div class="absolute inset-0 border-t-2 border-brand-500 rounded-full animate-spin"></div>
-          <div class="absolute inset-2 border-r-2 border-emerald-500 rounded-full animate-spin" style="animation-duration: 1.5s"></div>
-          <div class="absolute inset-4 border-b-2 border-cyan-400 rounded-full animate-spin" style="animation-duration: 2s"></div>
-          
-          <div class="absolute font-mono text-[9px] text-emerald-400 font-black animate-pulse uppercase tracking-widest text-center leading-relaxed">
-            INITIALIZING<br>SESSION
+           class="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+           style="background: #020617;">
+
+        <!-- Ambient background blobs matching main page -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+          <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-20"
+               style="background: radial-gradient(circle, #6366f1 0%, transparent 70%); filter: blur(80px);"></div>
+          <div class="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] rounded-full opacity-15"
+               style="background: radial-gradient(circle, #8b5cf6 0%, transparent 70%); filter: blur(80px);"></div>
+        </div>
+
+        <!-- Central content -->
+        <div class="relative z-10 flex flex-col items-center gap-8 px-10">
+
+          <!-- Logo with animated glow ring -->
+          <div class="relative flex items-center justify-center">
+            <div class="absolute w-28 h-28 rounded-full border border-brand-500/30 animate-ping"
+                 style="animation-duration: 2.5s;"></div>
+            <div class="absolute w-24 h-24 rounded-full border border-brand-500/20"></div>
+            <div class="w-20 h-20 rounded-full bg-slate-900/90 border border-slate-700/60 flex items-center justify-center"
+                 style="box-shadow: 0 0 40px rgba(99,102,241,0.3), 0 0 80px rgba(99,102,241,0.1);">
+              <div class="w-14 h-14 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <img src="/logo.png" class="w-11 h-11 object-contain" alt="IIIT Ranchi" />
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Progress visual bar -->
-        <div class="w-64 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-          <div class="h-full bg-gradient-to-r from-brand-500 via-emerald-500 to-cyan-400 transition-all duration-150 ease-out"
-               [style.width.%]="bootProgress()"></div>
-        </div>
+          <!-- Name -->
+          <div class="text-center">
+            <p class="text-white font-black text-lg tracking-tight">IIIT Ranchi</p>
+            <p class="text-slate-500 text-[10px] font-bold tracking-widest uppercase mt-0.5">Faculty Feedback System</p>
+          </div>
 
-        <!-- Academic custom progression text strings -->
-        <div class="mt-5 font-mono text-xs text-slate-400 text-center font-bold tracking-wide">
-          <span *ngIf="bootProgress() < 30" class="animate-pulse">Establishing secure link with IIIT Ranchi cloud shard...</span>
-          
-          <span *ngIf="bootProgress() >= 30 && bootProgress() < 70 && selectedRole() === 'student'" class="animate-pulse">
-            Encrypting sessional credentials & loading courses registry...
-          </span>
-          <span *ngIf="bootProgress() >= 30 && bootProgress() < 70 && selectedRole() === 'faculty'" class="animate-pulse">
-            Syncing analytics engine & retrieving aggregates...
-          </span>
-          <span *ngIf="bootProgress() >= 30 && bootProgress() < 70 && selectedRole() === 'admin'" class="animate-pulse">
-            Opening control terminal & validating active sessions locks...
-          </span>
-          
-          <span *ngIf="bootProgress() >= 70" class="animate-pulse">Authenticating role authorization profile dashboard...</span>
+          <!-- Role-aware progress bar -->
+          <div class="w-72 space-y-3">
+            <div class="w-full h-[3px] bg-slate-800/80 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-200 ease-out"
+                   [style.width.%]="bootProgress()"
+                   [ngClass]="{
+                     'bg-gradient-to-r from-brand-600 via-brand-400 to-violet-400': selectedRole() === 'student' || !selectedRole(),
+                     'bg-gradient-to-r from-emerald-600 via-emerald-400 to-cyan-400': selectedRole() === 'faculty',
+                     'bg-gradient-to-r from-violet-600 via-brand-500 to-cyan-500': selectedRole() === 'admin'
+                   }"></div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest">Loading</span>
+              <span class="text-[10px] font-mono font-black tabular-nums"
+                    [ngClass]="{
+                      'text-brand-400': selectedRole() === 'student' || !selectedRole(),
+                      'text-emerald-400': selectedRole() === 'faculty',
+                      'text-violet-400': selectedRole() === 'admin'
+                    }">{{ bootProgress() }}%</span>
+            </div>
+          </div>
+
+          <!-- Terminal-style status line -->
+          <div class="font-mono text-[11px] text-center px-4 min-h-[20px]">
+            <span *ngIf="bootProgress() < 30" class="text-slate-500 animate-pulse">
+              &rsaquo; Establishing encrypted tunnel to cloud...
+            </span>
+            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && selectedRole() === 'student'" class="text-brand-400 animate-pulse">
+              &rsaquo; Loading student course registry &amp; session keys...
+            </span>
+            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && selectedRole() === 'faculty'" class="text-emerald-400 animate-pulse">
+              &rsaquo; Syncing analytics engine &amp; feedback aggregates...
+            </span>
+            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && selectedRole() === 'admin'" class="text-violet-400 animate-pulse">
+              &rsaquo; Initializing control terminal &amp; session locks...
+            </span>
+            <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && !selectedRole()" class="text-slate-400 animate-pulse">
+              &rsaquo; Validating institutional authorization tokens...
+            </span>
+            <span *ngIf="bootProgress() >= 65 && bootProgress() < 92" class="text-slate-400 animate-pulse">
+              &rsaquo; Verifying role permissions &amp; security scope...
+            </span>
+            <span *ngIf="bootProgress() >= 92" class="text-slate-300 animate-pulse">
+              &rsaquo; Access granted. Launching dashboard...
+            </span>
+          </div>
+
         </div>
       </div>
 
@@ -453,6 +547,92 @@ interface CarouselSlide {
     .spin-reverse {
       animation: spin 16s linear infinite reverse;
     }
+
+    /* --- 3D Atomic Orbit Styles --- */
+    .orbit-container {
+      perspective: 1200px;
+      transform-style: preserve-3d;
+      z-index: 0;
+      /* 3D Tumble animation for the entire atom */
+      animation: atom-tumble 24s infinite linear;
+    }
+    @keyframes atom-tumble {
+      0% { transform: rotateX(10deg) rotateY(0deg); }
+      50% { transform: rotateX(-10deg) rotateY(180deg); }
+      100% { transform: rotateX(10deg) rotateY(360deg); }
+    }
+
+    .orbit {
+      position: absolute;
+      inset: -10px; /* Make orbits slightly larger than container */
+      border-radius: 50%;
+      transform-style: preserve-3d;
+    }
+    /* Red Orbit */
+    .orbit-1 {
+      border: 2px solid rgba(239, 68, 68, 0.2);
+      border-left: 2px solid rgba(239, 68, 68, 0.9);
+      border-right: 2px solid rgba(239, 68, 68, 0.5);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 20px rgba(239, 68, 68, 0.3);
+      animation: spin-orbit-1 8s linear infinite;
+    }
+    /* Green Orbit */
+    .orbit-2 {
+      border: 2px solid rgba(34, 197, 94, 0.2);
+      border-top: 2px solid rgba(34, 197, 94, 0.9);
+      border-bottom: 2px solid rgba(34, 197, 94, 0.5);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.3), inset 0 0 20px rgba(34, 197, 94, 0.3);
+      animation: spin-orbit-2 10s linear infinite;
+    }
+    /* Blue Orbit */
+    .orbit-3 {
+      border: 2px solid rgba(59, 130, 246, 0.2);
+      border-right: 2px solid rgba(59, 130, 246, 0.9);
+      border-left: 2px solid rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.3);
+      animation: spin-orbit-3 12s linear infinite;
+    }
+
+    @keyframes spin-orbit-1 {
+      0% { transform: rotateX(75deg) rotateY(-45deg) rotateZ(0deg); }
+      100% { transform: rotateX(75deg) rotateY(-45deg) rotateZ(360deg); }
+    }
+    @keyframes spin-orbit-2 {
+      0% { transform: rotateX(75deg) rotateY(15deg) rotateZ(0deg); }
+      100% { transform: rotateX(75deg) rotateY(15deg) rotateZ(360deg); }
+    }
+    @keyframes spin-orbit-3 {
+      0% { transform: rotateX(75deg) rotateY(75deg) rotateZ(0deg); }
+      100% { transform: rotateX(75deg) rotateY(75deg) rotateZ(360deg); }
+    }
+
+    .orbit-dot {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background-color: #60a5fa;
+      border-radius: 50%;
+      box-shadow: 0 0 8px 2px rgba(59, 130, 246, 0.8);
+      transform: translate(-50%, -50%);
+    }
+    .orbit-text {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      color: #93c5fd;
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 900;
+      text-shadow: 0 0 5px rgba(59, 130, 246, 0.8);
+      /* Keep text upright towards camera by counter-rotating */
+      transform: translateX(-50%) rotateZ(-360deg) rotateY(-55deg) rotateX(-70deg);
+      animation: counter-spin-3 10s linear infinite reverse;
+    }
+    @keyframes counter-spin-3 {
+      0% { transform: translateX(-50%) rotateZ(0deg) rotateY(-55deg) rotateX(-70deg); }
+      100% { transform: translateX(-50%) rotateZ(360deg) rotateY(-55deg) rotateX(-70deg); }
+    }
+    /* --------------------------------- */
     @keyframes scale-in {
       0% { transform: scale(0.96); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
@@ -469,12 +649,14 @@ interface CarouselSlide {
     }
   `]
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, AfterViewInit {
   private fb     = inject(FormBuilder);
   private auth   = inject(AuthService);
   private router = inject(Router);
   private route  = inject(ActivatedRoute);
   private spinner= inject(SpinnerService);
+
+  @ViewChild('meshCanvas') meshCanvas!: ElementRef<HTMLCanvasElement>;
 
   // Portal dynamic routing state
   selectedRole = signal<'student' | 'faculty' | 'admin' | null>(null);
@@ -494,6 +676,9 @@ export class LoginComponent implements OnInit {
   // Sessional Progressive booting screen states
   isBootingApp   = false;
   bootProgress   = signal(0);
+
+  // Sandbox profile random label (updates on each autofill tap)
+  sandboxLabel   = signal<string>('Tap to auto-fill a random account');
 
   // Left Panel features slides carousel
   activeSlideIndex = signal(0);
@@ -519,16 +704,77 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      email:    ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required],
+      remember: [false]
     });
 
     this.otpForm = this.fb.group({
-      phone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
-      otp: ['', [Validators.pattern(/^[0-9]{6}$/)]]
+      email: ['', [Validators.required, Validators.email]],
+      otp:   ['', [Validators.required, Validators.pattern('^[0-9]{6}$')]]
     });
 
-    // Auto rotative active features slides
+
+
+    this.startCarouselRotation();
+  }
+
+  ngAfterViewInit() {
+    this.initMeshShader();
+  }
+
+  // ==========================================
+  // CANVAS MESH SHADER LOGIC
+  // ==========================================
+  initMeshShader() {
+    if (!this.meshCanvas) return;
+    const canvas = this.meshCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let time = 0;
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    const draw = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      time += 0.002;
+
+      // Draw two large animated glowing blobs
+      const drawBlob = (xOffset: number, yOffset: number, rBase: number, color: string, speed: number) => {
+        const x = canvas.width/2 + Math.sin(time * speed + xOffset) * canvas.width * 0.4;
+        const y = canvas.height/2 + Math.cos(time * speed * 1.3 + yOffset) * canvas.height * 0.4;
+        const radius = rBase + Math.sin(time * speed * 2) * rBase * 0.1;
+
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      };
+
+      // Use theme colors but dynamically calculated
+      const isCyber = document.documentElement.classList.contains('theme-cyber');
+      
+      // Indigo blob
+      drawBlob(0, 0, Math.max(canvas.width, canvas.height) * 0.7, 
+               isCyber ? 'rgba(99, 102, 241, 0.4)' : 'rgba(37, 99, 235, 0.3)', 1.2);
+      
+      // Emerald / Purple blob
+      drawBlob(2, 1, Math.max(canvas.width, canvas.height) * 0.6, 
+               isCyber ? 'rgba(16, 185, 129, 0.3)' : 'rgba(168, 85, 247, 0.3)', 0.8);
+
+      requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+  }
+
+  startCarouselRotation() {
     setInterval(() => {
       this.activeSlideIndex.update(idx => (idx + 1) % this.slides.length);
     }, 6000);
@@ -584,18 +830,53 @@ export class LoginComponent implements OnInit {
   }
 
   useDemoProfile(role: 'student' | 'faculty' | 'admin') {
-    const map = {
-      student: { email: 'student@iiitranchi.ac.in', pass: 'student123' },
-      faculty: { email: 'faculty@iiitranchi.ac.in', pass: 'faculty123' },
-      admin:   { email: 'admin@iiitranchi.ac.in',   pass: 'admin123' }
+    // Full sandbox roster — all seeded accounts
+    const SANDBOX: Record<string, { email: string; pass: string; name: string }[]> = {
+      student: [
+        { name: 'Aarav Sharma',   email: 'aarav.sharma@iiitranchi.ac.in',   pass: 'IIITR@2026' },
+        { name: 'Ananya Verma',   email: 'ananya.verma@iiitranchi.ac.in',   pass: 'IIITR@2026' },
+        { name: 'Kabir Gupta',    email: 'kabir.gupta@iiitranchi.ac.in',    pass: 'IIITR@2026' },
+        { name: 'Ishaan Roy',     email: 'ishaan.roy@iiitranchi.ac.in',     pass: 'IIITR@2026' },
+        { name: 'Sanya Iyer',     email: 'sanya.iyer@iiitranchi.ac.in',     pass: 'IIITR@2026' },
+        { name: 'Diya Sen',       email: 'diya.sen@iiitranchi.ac.in',       pass: 'IIITR@2026' },
+        { name: 'Rohan Mehta',    email: 'rohan.mehta@iiitranchi.ac.in',    pass: 'IIITR@2026' },
+        { name: 'Aditi Rao',      email: 'aditi.rao@iiitranchi.ac.in',      pass: 'IIITR@2026' },
+        { name: 'Aryan Joshi',    email: 'aryan.joshi@iiitranchi.ac.in',    pass: 'IIITR@2026' },
+        { name: 'Meera Nair',     email: 'meera.nair@iiitranchi.ac.in',     pass: 'IIITR@2026' },
+        { name: 'Pranav Saxena',  email: 'pranav.saxena@iiitranchi.ac.in',  pass: 'IIITR@2026' },
+        { name: 'Kirti Mishra',   email: 'kirti.mishra@iiitranchi.ac.in',   pass: 'IIITR@2026' },
+        { name: 'Devansh Patil',  email: 'devansh.patil@iiitranchi.ac.in',  pass: 'IIITR@2026' },
+        { name: 'Nisha Reddy',    email: 'nisha.reddy@iiitranchi.ac.in',    pass: 'IIITR@2026' },
+        { name: 'Yash Kapoor',    email: 'yash.kapoor@iiitranchi.ac.in',    pass: 'IIITR@2026' },
+        // Legacy seed account
+        { name: 'Karn Ashutosh',  email: 'student@iiitranchi.ac.in',        pass: 'student123' }
+      ],
+      faculty: [
+        { name: 'Dr. R. K. Singh',   email: 'rk.singh@iiitranchi.ac.in',     pass: 'faculty123' },
+        { name: 'Prof. Sneha Das',   email: 'sneha.das@iiitranchi.ac.in',    pass: 'faculty123' },
+        { name: 'Dr. Vikram Seth',   email: 'vikram.seth@iiitranchi.ac.in',  pass: 'faculty123' },
+        { name: 'Dr. Manoj Dubey',   email: 'manoj.dubey@iiitranchi.ac.in',  pass: 'faculty123' },
+        { name: 'Prof. Priya Nair',  email: 'priya.nair@iiitranchi.ac.in',   pass: 'faculty123' },
+        // Legacy seed account
+        { name: 'Dr. Amit Kumar',    email: 'faculty@iiitranchi.ac.in',      pass: 'faculty123' }
+      ],
+      admin: [
+        { name: 'System Admin',  email: 'admin@iiitranchi.ac.in',  pass: 'admin123' }
+      ]
     };
-    const prof = map[role];
-    this.loginForm.patchValue({ email: prof.email, password: prof.pass });
+
+    const pool = SANDBOX[role];
+    // Pick a random profile from the pool on every tap
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    this.loginForm.patchValue({ email: pick.email, password: pick.pass });
+    // Also update the sandbox label display
+    this.sandboxLabel.set(pick.name);
   }
 
   onSubmit() {
     if (this.loginForm.invalid) return;
 
+    this.triggerHapticFeedback();
     this.loading.set(true);
     this.error.set('');
     this.spinner.show();
@@ -654,7 +935,7 @@ export class LoginComponent implements OnInit {
 
     setTimeout(() => {
       this.loading.set(false);
-      
+
       // Simulate successful auth as student
       this.auth.handleAuthSuccess({
         token: 'simulated_otp_token',
@@ -668,12 +949,21 @@ export class LoginComponent implements OnInit {
           }
         }
       });
-      
+
       this.showBootingScreen('student');
     }, 1200);
   }
 
   loginWithGoogle() {
     this.auth.loginWithGoogle();
+  }
+
+  async triggerHapticFeedback() {
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    } catch (err) {
+      // Gracefully bypass on browser
+    }
   }
 }

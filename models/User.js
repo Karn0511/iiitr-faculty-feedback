@@ -44,6 +44,25 @@ const userSchema = new mongoose.Schema({
         },
         trim: true
     },
+    rollNo: {
+        type: String,
+        unique: true,
+        sparse: true,
+        trim: true,
+        required: function () {
+            return this.role === 'Student';
+        }
+    },
+    semester: {
+        type: Number,
+        required: function () {
+            return this.role === 'Student';
+        }
+    },
+    requiresPasswordChange: {
+        type: Boolean,
+        default: true
+    },
     isActive: {
         type: Boolean,
         default: true
