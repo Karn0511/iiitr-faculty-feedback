@@ -56,6 +56,49 @@ import { FormsModule } from '@angular/forms';
         </div>
       </div>
 
+      <!-- DEAN SENTIMENT VELOCITY PULSE CARDS -->
+      <div *ngIf="alerts().length > 0" class="mb-8 animate-fade-in">
+        <div class="flex items-center gap-2.5 mb-4">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+          </span>
+          <h2 class="text-xs font-black uppercase tracking-widest text-slate-400">Dean's Sentiment Velocity Alerts (Course Rating Drop Warning)</h2>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div *ngFor="let alert of alerts()" 
+               class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500/10 via-slate-950/40 to-slate-950/60 border border-rose-500/30 p-5 shadow-glow shadow-rose-500/5 hover:border-rose-500/55 transition-all duration-300">
+            <!-- Pulsing red background blob -->
+            <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-rose-500/10 blur-2xl"></div>
+
+            <div class="relative z-10 flex items-start justify-between gap-4">
+              <div class="space-y-1">
+                <span class="text-[9px] font-extrabold tracking-widest uppercase bg-rose-500/15 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full">VELOCITY ALERT</span>
+                <h3 class="text-sm font-extrabold text-white mt-2 leading-snug">{{ alert.courseId?.courseName }}</h3>
+                <p class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">{{ alert.courseId?.courseCode }}</p>
+              </div>
+
+              <!-- Huge drop percentage badge -->
+              <div class="text-right">
+                <div class="text-2xl font-black text-rose-400 font-mono tracking-tighter animate-pulse">-{{ alert.dropPercentage }}%</div>
+                <div class="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider">Sentiment Drop</div>
+              </div>
+            </div>
+
+            <!-- Score shift comparative row -->
+            <div class="relative z-10 mt-5 pt-3 border-t border-rose-500/15 flex items-center justify-between text-xs">
+              <div class="text-slate-400">
+                7 Days Ago: <span class="text-white font-extrabold font-mono">{{ alert.previousScore | number:'1.1-1' }}</span>
+              </div>
+              <div class="text-slate-400">
+                Current: <span class="text-rose-400 font-extrabold font-mono">{{ alert.currentScore | number:'1.1-1' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Main Admin Sections -->
       <div class="grid lg:grid-cols-12 gap-8">
 
@@ -515,6 +558,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
   leaderboard  = signal<FacultyLeaderboardItem[]>([]);
   questions    = signal<QuestionItem[]>([]);
   sessions     = signal<FeedbackSessionItem[]>([]);
+  alerts       = signal<any[]>([]);
 
   // CSV Bulk Ingestion Signals
   activeTab    = signal<'students' | 'faculty' | 'assignments'>('students');
@@ -762,6 +806,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     // 4. Fetch Sessions
     this.adminService.getAllSessions().subscribe({
       next: (res) => this.sessions.set(res?.data?.sessions || [])
+    });
+
+    // 5. Fetch Dean Velocity Alerts
+    this.adminService.getAlerts().subscribe({
+      next: (res) => this.alerts.set(res?.data?.alerts || [])
     });
   }
 

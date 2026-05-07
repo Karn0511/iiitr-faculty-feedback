@@ -1,5 +1,6 @@
 const Feedback  = require('../models/Feedback');
 const mongoose  = require('mongoose');
+const { decrypt } = require('../utils/cryptoHelper');
 
 // ============================================================
 // GET DASHBOARD STATS — 8-Stage Aggregation Pipeline
@@ -160,10 +161,16 @@ exports.getCourseRemarks = async (req, res) => {
             }
         ).lean();
 
+        // Decrypt the remarks in-memory
+        const decryptedRemarks = remarks.map(r => ({
+            createdAt: r.createdAt,
+            remark: decrypt(r.remark)
+        }));
+
         res.status(200).json({
             success: true,
-            count:   remarks.length,
-            data:    { remarks }
+            count:   decryptedRemarks.length,
+            data:    { remarks: decryptedRemarks }
             // Each remark object: { remark: "...", createdAt: "..." }
             // No student identifier is ever present
         });
@@ -282,7 +289,8 @@ exports.getAIRemarkSummary = async (req, res) => {
             { remark: 1, _id: 0, studentId: 0 }  // Anonymized projection
         ).lean();
 
-        const remarks = feedbackDocs.map(f => f.remark);
+        // Decrypt remarks for Gemini AI consumption
+        const remarks = feedbackDocs.map(f => decrypt(f.remark));
 
         // Graceful early exit — no Gemini API call wasted on empty data
         if (remarks.length === 0) {

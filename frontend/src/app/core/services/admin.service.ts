@@ -106,4 +106,23 @@ export class AdminService {
       withCredentials: true
     });
   }
+
+  getAlerts(): Observable<{ success: boolean; data: { alerts: AlertItem[] } }> {
+    return this.http.get<any>(`${this.API}/alerts`, { withCredentials: true });
+  }
+}
+
+export interface AlertItem {
+  _id: string;
+  courseId: {
+    _id: string;
+    courseName: string;
+    courseCode: string;
+  };
+  sessionId: string;
+  dropPercentage: number;
+  previousScore: number;
+  currentScore: number;
+  status: string;
+  createdAt: string;
 }

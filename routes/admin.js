@@ -67,6 +67,9 @@ router.get('/stats', adminController.getGlobalStats);
 // GET /api/admin/leaderboard — Faculty ranked by average score (top 50)
 router.get('/leaderboard', adminController.getFacultyLeaderboard);
 
+// GET /api/admin/alerts      — Dean alerts for course average drops > 15%
+router.get('/alerts', adminController.getAlerts);
+
 // ============================================================
 // QUESTIONNAIRE MANAGEMENT — Protected: Admin only
 // Questions are soft-toggled (never deleted) to preserve
