@@ -94,7 +94,7 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
 
             <!-- Email -->
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1 font-semibold">Institutional Email</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Institutional Email</label>
               <input formControlName="email" type="email" placeholder="john.doe&#64;iiitranchi.ac.in" class="input-field" />
               <p *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.invalid" class="text-xs text-rose-400 mt-1">
                 A valid institutional email ending in &#64;iiitranchi.ac.in is required.
