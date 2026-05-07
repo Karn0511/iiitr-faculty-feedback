@@ -19,12 +19,16 @@ const connectDB = async () => {
         if (!adminExists) {
             await User.create({
                 name: 'System Admin',
-                email: admin,
-                password: 'admin@123',
+                email: adminEmail,
+                password: 'admin123',
                 role: 'Admin',
                 isActive: true
             });
             console.log(`🌱 Seeded Admin user: ${adminEmail}`);
+        } else {
+            // Update password to be simple as requested
+            adminExists.password = 'admin123';
+            await adminExists.save();
         }
 
         const facultyExists = await User.findOne({ email: facultyEmail });
@@ -32,11 +36,15 @@ const connectDB = async () => {
             await User.create({
                 name: 'Dr. Amit Kumar',
                 email: facultyEmail,
-                password: 'Faculty@123',
+                password: 'faculty123',
                 role: 'Faculty',
                 isActive: true
             });
             console.log(`🌱 Seeded Faculty user: ${facultyEmail}`);
+        } else {
+            // Update password to be simple as requested
+            facultyExists.password = 'faculty123';
+            await facultyExists.save();
         }
 
         const studentExists = await User.findOne({ email: studentEmail });
@@ -44,12 +52,16 @@ const connectDB = async () => {
             await User.create({
                 name: 'Karn Ashutosh',
                 email: studentEmail,
-                password: 'Student@123',
+                password: 'student123',
                 role: 'Student',
                 section: 'A',
                 isActive: true
             });
             console.log(`🌱 Seeded Student user: ${studentEmail}`);
+        } else {
+            // Update password to be simple as requested
+            studentExists.password = 'student123';
+            await studentExists.save();
         }
 
     } catch (error) {

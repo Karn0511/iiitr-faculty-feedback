@@ -405,9 +405,9 @@ export class LoginComponent implements OnInit {
 
   useDemoProfile(role: 'student' | 'faculty' | 'admin') {
     const map = {
-      student: { email: 'student@iiitranchi.ac.in', pass: 'Student@123' },
-      faculty: { email: 'faculty@iiitranchi.ac.in', pass: 'Faculty@123' },
-      admin:   { email: 'admin@iiitranchi.ac.in',   pass: 'Admin@123' }
+      student: { email: 'student@iiitranchi.ac.in', pass: 'student123' },
+      faculty: { email: 'faculty@iiitranchi.ac.in', pass: 'faculty123' },
+      admin:   { email: 'admin@iiitranchi.ac.in',   pass: 'admin123' }
     };
     const prof = map[role];
     this.loginForm.patchValue({ email: prof.email, password: prof.pass });
