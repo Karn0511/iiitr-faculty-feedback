@@ -49,4 +49,15 @@ router.patch('/sessions/:sessionId/toggle',     adminController.toggleFeedbackSe
 // GET /api/admin/users?role=Student|Faculty|Admin
 router.get('/users', adminController.getAllUsers);
 
+// ============================================================
+// GLOBAL ANALYTICS — Protected: Admin only via router.use() above
+// ============================================================
+
+// GET /api/admin/stats       — Total students, faculty, feedback, avg institute score
+router.get('/stats', adminController.getGlobalStats);
+
+// GET /api/admin/leaderboard — Faculty ranked by average score (top 50)
+router.get('/leaderboard', adminController.getFacultyLeaderboard);
+
 module.exports = router;
+

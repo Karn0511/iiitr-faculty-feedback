@@ -355,3 +355,135 @@ exports.getAllUsers = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// ============================================================
+// GET GLOBAL STATS — Institute-wide dashboard metrics
+// Route:    GET /api/admin/stats
+// Protected: Admin only (restrictTo enforced in routes/admin.js)
+// ============================================================
+exports.getGlobalStats = async (req, res) => {
+    try {
+        const Feedback = require('../models/Feedback');
+
+        // Run all counts in parallel for performance
+        const [totalStudents, totalFaculty, totalFeedback, scoreResult] = await Promise.all([
+            User.countDocuments({ role: 'Student' }),
+            User.countDocuments({ role: 'Faculty' }),
+            Feedback.countDocuments(),
+
+            // Institute-wide average score across ALL ratings
+            Feedback.aggregate([
+                { $unwind: '$ratings' },
+                {
+                    $group: {
+                        _id:          null,
+                        averageScore: { $avg: '$ratings.score' },
+                        totalRatings: { $sum: 1 }
+                    }
+                },
+                {
+                    $project: {
+                        _id:          0,
+                        averageScore: { $round: ['$averageScore', 2] },
+                        totalRatings: 1
+                    }
+                }
+            ])
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalStudents,
+                totalFaculty,
+                totalFeedback,
+                averageInstituteScore: scoreResult[0]?.averageScore ?? null,
+                totalRatings:          scoreResult[0]?.totalRatings  ?? 0
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ============================================================
+// GET FACULTY LEADERBOARD — Ranked by average score
+// Route:    GET /api/admin/leaderboard
+// Protected: Admin only (restrictTo enforced in routes/admin.js)
+//
+// Aggregation pipeline:
+//   S1 $unwind  — flatten ratings array
+//   S2 $group   — avg score + unique response count per faculty
+//   S3 $lookup  — enrich with faculty name/email from users collection
+//   S4 $unwind  — flatten the lookup result
+//   S5 $project — clean, strip internal IDs
+//   S6 $sort    — highest average first
+//   S7 $limit   — top 50 results
+// ============================================================
+exports.getFacultyLeaderboard = async (req, res) => {
+    try {
+        const Feedback = require('../models/Feedback');
+
+        const leaderboard = await Feedback.aggregate([
+            // S1: Flatten all rating entries
+            { $unwind: '$ratings' },
+
+            // S2: Compute avg score and unique feedback count per faculty
+            {
+                $group: {
+                    _id:            '$facultyId',
+                    averageScore:   { $avg: '$ratings.score' },
+                    uniqueFeedback: { $addToSet: '$_id' }, // dedup submission count
+                    totalRatings:   { $sum: 1 }
+                }
+            },
+
+            // S3: Join User collection for faculty name and email
+            {
+                $lookup: {
+                    from:         'users',
+                    localField:   '_id',
+                    foreignField: '_id',
+                    as:           'facultyInfo'
+                }
+            },
+
+            // S4: Flatten the join result
+            { $unwind: '$facultyInfo' },
+
+            // S5: Clean projection — no internal IDs exposed
+            {
+                $project: {
+                    _id:            0,
+                    facultyId:      '$_id',
+                    name:           '$facultyInfo.name',
+                    email:          '$facultyInfo.email',
+                    averageScore:   { $round: ['$averageScore', 2] },
+                    totalResponses: { $size: '$uniqueFeedback' },
+                    totalRatings:   1
+                }
+            },
+
+            // S6: Best-rated faculty first
+            { $sort: { averageScore: -1 } },
+
+            // S7: Top 50 only
+            { $limit: 50 }
+        ]);
+
+        // Add rank numbers post-aggregation
+        const ranked = leaderboard.map((entry, index) => ({
+            rank: index + 1,
+            ...entry
+        }));
+
+        res.status(200).json({
+            success: true,
+            count:   ranked.length,
+            data:    { leaderboard: ranked }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+

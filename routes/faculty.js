@@ -33,4 +33,13 @@ router.get('/question-trends', facultyController.getQuestionTrends);
 // ============================================================
 router.get('/remarks/:courseId', facultyController.getCourseRemarks);
 
+// ============================================================
+// AI REMARK SUMMARY — Gemini-powered teaching insights
+// GET /api/faculty/ai-summary/:courseId
+// Protected: restrictTo('Faculty') via router.use() above
+// AI receives ONLY remark text — studentId never exposed
+// ============================================================
+router.get('/ai-summary/:courseId', facultyController.getAIRemarkSummary);
+
 module.exports = router;
+

@@ -260,3 +260,61 @@ exports.getQuestionTrends = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// ============================================================
+// GET AI REMARK SUMMARY — Gemini-powered teaching insights
+// Route:    GET /api/faculty/ai-summary/:courseId
+// Protected: Faculty only (restrictTo enforced in routes/faculty.js)
+//
+// ANONYMITY MAINTAINED:
+//   Only the remark text is passed to Gemini — studentId
+//   is excluded from the DB projection before AI processing.
+// ============================================================
+exports.getAIRemarkSummary = async (req, res) => {
+    try {
+        const { courseId }        = req.params;
+        const facultyId           = req.user.id;
+        const { analyzeFeedback } = require('../services/aiService');
+
+        // Fetch all non-empty remarks — studentId explicitly excluded
+        const feedbackDocs = await Feedback.find(
+            { facultyId, courseId, remark: { $exists: true, $ne: '' } },
+            { remark: 1, _id: 0, studentId: 0 }  // Anonymized projection
+        ).lean();
+
+        const remarks = feedbackDocs.map(f => f.remark);
+
+        // Graceful early exit — no Gemini API call wasted on empty data
+        if (remarks.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: 'No text remarks available for AI analysis yet.',
+                data:    null
+            });
+        }
+
+        // Run AI analysis via Gemini 1.5 Flash
+        const insights = await analyzeFeedback(remarks);
+
+        res.status(200).json({
+            success:      true,
+            courseId,
+            remarksCount: remarks.length,
+            data:         { insights }
+        });
+
+    } catch (error) {
+        // Distinguish Gemini API/JSON failures from general DB errors
+        const isAIError = error.message?.toLowerCase().includes('api') ||
+                          error.message?.toLowerCase().includes('json') ||
+                          error.message?.toLowerCase().includes('parse');
+
+        res.status(isAIError ? 502 : 500).json({
+            success: false,
+            message: isAIError
+                ? 'AI service temporarily unavailable. Please try again in a moment.'
+                : error.message
+        });
+    }
+};
+
