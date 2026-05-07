@@ -25,11 +25,21 @@ export class FacultyService {
     return this.http.get<any>(`${this.API}/summary`, { withCredentials: true });
   }
 
+  // Alias for getOverallSummary matching Phase 9 specification
+  getSummary(): Observable<{ success: boolean; data: { overallAverage: number; totalResponses: number } }> {
+    return this.getOverallSummary();
+  }
+
   getCourseRemarks(courseId: string): Observable<{ success: boolean; data: { remarks: { remark: string; createdAt: string }[] } }> {
     return this.http.get<any>(`${this.API}/remarks/${courseId}`, { withCredentials: true });
   }
 
   getAIRemarkSummary(courseId: string): Observable<{ success: boolean; data: { summary: { strengths: string[]; improvements: string[]; sentiment: string } } }> {
     return this.http.get<any>(`${this.API}/ai-summary/${courseId}`, { withCredentials: true });
+  }
+
+  // Alias for getAIRemarkSummary matching Phase 9 specification
+  getAIRemarksSummary(courseId: string): Observable<{ success: boolean; data: { summary: { strengths: string[]; improvements: string[]; sentiment: string } } }> {
+    return this.getAIRemarkSummary(courseId);
   }
 }
