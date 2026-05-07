@@ -64,6 +64,62 @@ const connectDB = async () => {
             await studentExists.save();
         }
 
+        // Seed active questions
+        const Questionnaire = require('../models/Questionnaire');
+        const qCount = await Questionnaire.countDocuments();
+        if (qCount === 0) {
+            await Questionnaire.create([
+                { questionText: 'Subject Knowledge & Preparation' },
+                { questionText: 'Communication & Explanation Clarity' },
+                { questionText: 'Syllabus Coverage & Punctuality' },
+                { questionText: 'Accessibility for Doubt Solving' }
+            ]);
+            console.log('🌱 Seeded 4 standard Questionnaire questions.');
+        }
+
+        // Seed course
+        const Course = require('../models/Course');
+        let course = await Course.findOne({ courseCode: 'CS101' });
+        if (!course) {
+            course = await Course.create({
+                courseName: 'Computer Programming & Data Structures',
+                courseCode: 'CS101'
+            });
+            console.log('🌱 Seeded Course: CS101');
+        }
+
+        // Seed Assignment connecting Dr. Amit Kumar (Faculty) to Course CS101 for Section A
+        const Assignment = require('../models/Assignment');
+        const facultyUser = await User.findOne({ email: facultyEmail });
+        if (facultyUser && course) {
+            const assignmentExists = await Assignment.findOne({
+                facultyId: facultyUser._id,
+                courseId: course._id,
+                section: 'A'
+            });
+            if (!assignmentExists) {
+                await Assignment.create({
+                    facultyId: facultyUser._id,
+                    courseId: course._id,
+                    section: 'A'
+                });
+                console.log('🌱 Seeded Assignment: Dr. Amit Kumar -> CS101 (Section A)');
+            }
+        }
+
+        // Seed Feedback Session to be open by default
+        const FeedbackSession = require('../models/FeedbackSession');
+        const sessionExists = await FeedbackSession.findOne({ sessionName: 'Spring 2026 Feedback' });
+        if (!sessionExists) {
+            await FeedbackSession.create({
+                sessionName: 'Spring 2026 Feedback',
+                isOpen: true,
+                startDate: new Date(),
+                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+            });
+            console.log('🌱 Seeded Feedback Session: Spring 2026 Feedback (Open)');
+        }
+
     } catch (error) {
         console.error(`❌ MongoDB Connection Error: ${error.message}`);
         process.exit(1);
