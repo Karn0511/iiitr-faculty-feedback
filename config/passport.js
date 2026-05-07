@@ -37,7 +37,8 @@ passport.use(
         clientID:     process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL:  '/api/auth/google/callback',
-        scope: ['profile', 'email']
+        scope: ['profile', 'email'],
+        proxy: true // Respect reverse proxy (Render) SSL headers to generate https callback URLs
     },
     async (accessToken, refreshToken, profile, done) => {
         try {
