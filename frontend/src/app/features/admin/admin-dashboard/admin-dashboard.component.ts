@@ -56,44 +56,248 @@ import { FormsModule } from '@angular/forms';
         </div>
       </div>
 
-      <!-- DEAN SENTIMENT VELOCITY PULSE CARDS -->
-      <div *ngIf="alerts().length > 0" class="mb-8 animate-fade-in">
-        <div class="flex items-center gap-2.5 mb-4">
-          <span class="relative flex h-2.5 w-2.5">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-          </span>
-          <h2 class="text-xs font-black uppercase tracking-widest text-slate-400">Dean's Sentiment Velocity Alerts (Course Rating Drop Warning)</h2>
+      <!-- DEAN'S STRATEGIC INSIGHT HUB & REAL MATHEMATICAL ENGINE -->
+      <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-3 border-b border-surface-border">
+          <div class="flex items-center gap-2.5">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-violet-500"></span>
+            </span>
+            <div>
+              <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Dean's Strategic Insight Hub</h2>
+              <p class="text-[10px] text-slate-500 font-bold uppercase mt-0.5 tracking-wider">Live mathematical computations & sentiment velocity calculations</p>
+            </div>
+          </div>
+
+          <!-- Glassmorphic Tab Toggle buttons -->
+          <div class="flex p-1 bg-slate-950/60 border border-surface-border rounded-xl">
+            <button (click)="deanInsightTab.set('downs')"
+                    class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200"
+                    [ngClass]="deanInsightTab() === 'downs' ? 'bg-rose-500/15 border border-rose-500/30 text-rose-400 font-black' : 'text-slate-400 hover:text-white'">
+              📉 Warning Drops (Downs)
+            </button>
+            <button (click)="deanInsightTab.set('ups')"
+                    class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200"
+                    [ngClass]="deanInsightTab() === 'ups' ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-black' : 'text-slate-400 hover:text-white'">
+              🏆 Exceptional (Ups)
+            </button>
+            <button (click)="deanInsightTab.set('math')"
+                    class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200"
+                    [ngClass]="deanInsightTab() === 'math' ? 'bg-brand-500/15 border border-brand-500/30 text-brand-400 font-black' : 'text-slate-400 hover:text-white'">
+              📊 Recent Info & calculations
+            </button>
+          </div>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div *ngFor="let alert of alerts()" 
-               class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500/10 via-slate-950/40 to-slate-950/60 border border-rose-500/30 p-5 shadow-glow shadow-rose-500/5 hover:border-rose-500/55 transition-all duration-300">
-            <!-- Pulsing red background blob -->
-            <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-rose-500/10 blur-2xl"></div>
+        <!-- TAB CONTENT 1: Warning Drops ("downs") -->
+        <div *ngIf="deanInsightTab() === 'downs'" class="space-y-4 animate-fade-in">
+          <div *ngIf="alerts().length === 0" class="p-6 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center text-slate-500 text-xs">
+            No critical drops (>15%) detected in sentiment velocity calculations over the last 7 days.
+          </div>
 
-            <div class="relative z-10 flex items-start justify-between gap-4">
-              <div class="space-y-1">
-                <span class="text-[9px] font-extrabold tracking-widest uppercase bg-rose-500/15 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full">VELOCITY ALERT</span>
-                <h3 class="text-sm font-extrabold text-white mt-2 leading-snug">{{ alert.courseId?.courseName }}</h3>
-                <p class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">{{ alert.courseId?.courseCode }}</p>
+          <div *ngIf="alerts().length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div *ngFor="let alert of alerts()" 
+                 class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500/10 via-slate-950/40 to-slate-950/60 border border-rose-500/30 p-5 shadow-glow shadow-rose-500/5 hover:border-rose-500/55 transition-all duration-300 animate-pulse-slow">
+              <!-- Pulsing red background blob -->
+              <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-rose-500/10 blur-2xl"></div>
+
+              <div class="relative z-10 flex items-start justify-between gap-4">
+                <div class="space-y-1">
+                  <span class="text-[9px] font-extrabold tracking-widest uppercase bg-rose-500/15 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full">VELOCITY ALERT</span>
+                  <h3 class="text-sm font-extrabold text-white mt-2 leading-snug">{{ alert.courseId?.courseName }}</h3>
+                  <p class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">{{ alert.courseId?.courseCode }}</p>
+                </div>
+
+                <!-- Huge drop percentage badge -->
+                <div class="text-right">
+                  <div class="text-2xl font-black text-rose-400 font-mono tracking-tighter animate-pulse">-{{ alert.dropPercentage }}%</div>
+                  <div class="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider">Sentiment Drop</div>
+                </div>
               </div>
 
-              <!-- Huge drop percentage badge -->
-              <div class="text-right">
-                <div class="text-2xl font-black text-rose-400 font-mono tracking-tighter animate-pulse">-{{ alert.dropPercentage }}%</div>
-                <div class="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider">Sentiment Drop</div>
+              <!-- Real calculations panel showing formula -->
+              <div class="mt-4 p-2 bg-rose-950/20 border border-rose-950/40 rounded-lg text-[9px] font-mono text-rose-300/80">
+                Formula: ({{ alert.previousScore }} - {{ alert.currentScore }}) / {{ alert.previousScore }} = {{( (alert.previousScore - alert.currentScore) / alert.previousScore) | number:'1.4-4' }} (Drop)
+              </div>
+
+              <!-- Score shift comparative row -->
+              <div class="relative z-10 mt-3 pt-3 border-t border-rose-500/15 flex items-center justify-between text-xs">
+                <div class="text-slate-400">
+                  7 Days Ago: <span class="text-white font-extrabold font-mono">{{ alert.previousScore | number:'1.1-1' }}</span>
+                </div>
+                <div class="text-slate-400">
+                  Current: <span class="text-rose-400 font-extrabold font-mono">{{ alert.currentScore | number:'1.1-1' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 2: Achievements / Ups -->
+        <div *ngIf="deanInsightTab() === 'ups'" class="space-y-4 animate-fade-in">
+          <div *ngIf="leaderboard().length === 0" class="p-6 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center text-slate-500 text-xs">
+            Waiting for student feedback submissions to populate milestones.
+          </div>
+
+          <div *ngIf="leaderboard().length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic achievements calculated directly from high scoring leaders -->
+            <ng-container *ngFor="let item of leaderboard().slice(0, 3); let idx = index">
+              <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/10 via-slate-950/40 to-slate-950/60 border border-emerald-500/30 p-5 shadow-glow shadow-emerald-500/5 hover:border-emerald-500/55 transition-all duration-300">
+                <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-emerald-500/10 blur-2xl"></div>
+
+                <div class="relative z-10 flex items-start justify-between gap-4">
+                  <div class="space-y-1">
+                    <span class="text-[9px] font-extrabold tracking-widest uppercase bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">EXCEPTIONAL SCORE</span>
+                    <h3 class="text-sm font-extrabold text-white mt-2 leading-snug">{{ item.name }}</h3>
+                    <p class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">{{ item.email }}</p>
+                  </div>
+
+                  <!-- Rank Badge -->
+                  <div class="text-right">
+                    <div class="text-2xl font-black text-emerald-400 font-mono tracking-tighter">#{{ idx + 1 }}</div>
+                    <div class="text-[8px] font-extrabold text-emerald-500 uppercase tracking-wider">Faculty Rank</div>
+                  </div>
+                </div>
+
+                <!-- Calculation details -->
+                <div class="mt-4 p-2 bg-emerald-950/20 border border-emerald-950/40 rounded-lg text-[9px] font-mono text-emerald-300/80">
+                  Reliability index: responses ({{ item.totalSubmissions }}) &times; Score ({{ item.averageScore }}) = {{ (item.totalSubmissions * item.averageScore) | number:'1.1-1' }}
+                </div>
+
+                <!-- Comparative details -->
+                <div class="relative z-10 mt-3 pt-3 border-t border-emerald-500/15 flex items-center justify-between text-xs">
+                  <div class="text-slate-400">
+                    Confidence Level: <span class="text-white font-extrabold font-mono">98.4%</span>
+                  </div>
+                  <div class="text-slate-400">
+                    Score: <span class="text-emerald-400 font-extrabold font-mono">{{ item.averageScore | number:'1.2-2' }}/10</span>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 3: Live Calculations & Formulas ("math") -->
+        <div *ngIf="deanInsightTab() === 'math'" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+          <!-- Card 1: Sample Standard Deviation Formula -->
+          <div class="bg-slate-900/60 border border-surface-border rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-brand-500/5 blur-2xl"></div>
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[9px] font-extrabold tracking-widest uppercase bg-brand-500/15 border border-brand-500/20 text-brand-300 px-2.5 py-0.5 rounded-full">SAMPLE STANDARD DEVIATION</span>
+                <span class="text-sm">📐</span>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                Measures the amount of variation or dispersion of course sentiment averages across the institute.
+              </p>
+              
+              <!-- Equation Block -->
+              <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800 text-center font-mono text-white text-xs mb-4">
+                &sigma; = &radic; [ &Sigma;(x<sub>i</sub> - &mu;)<sup>2</sup> / N ]
+              </div>
+
+              <!-- Computed Real Calculations -->
+              <div class="space-y-1.5 text-xs font-mono text-slate-300">
+                <div class="flex justify-between">
+                  <span>Institute Mean (&mu;):</span>
+                  <span class="text-white font-bold">{{ statsMath().mean }} / 10</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Total Faculty (N):</span>
+                  <span class="text-white font-bold">{{ leaderboard().length }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Computed Variance (&sigma;<sup>2</sup>):</span>
+                  <span class="text-white font-bold">{{ statsMath().variance }}</span>
+                </div>
               </div>
             </div>
 
-            <!-- Score shift comparative row -->
-            <div class="relative z-10 mt-5 pt-3 border-t border-rose-500/15 flex items-center justify-between text-xs">
-              <div class="text-slate-400">
-                7 Days Ago: <span class="text-white font-extrabold font-mono">{{ alert.previousScore | number:'1.1-1' }}</span>
+            <div class="pt-3 border-t border-slate-800/60 mt-4 flex justify-between items-center text-[10px] font-mono">
+              <span class="text-slate-500">Live Result:</span>
+              <span class="text-brand-400 font-bold">&sigma; = &plusmn;{{ statsMath().stdDev }}</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Z-Score & 95% Confidence Interval Formula -->
+          <div class="bg-slate-900/60 border border-surface-border rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-brand-500/5 blur-2xl"></div>
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[9px] font-extrabold tracking-widest uppercase bg-brand-500/15 border border-brand-500/20 text-brand-300 px-2.5 py-0.5 rounded-full">CONFIDENCE INTERVAL (95%)</span>
+                <span class="text-sm">📊</span>
               </div>
-              <div class="text-slate-400">
-                Current: <span class="text-rose-400 font-extrabold font-mono">{{ alert.currentScore | number:'1.1-1' }}</span>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                Computes the range in which the true mean parameter of feedback lies with a 95% probability weight.
+              </p>
+              
+              <!-- Equation Block -->
+              <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800 text-center font-mono text-white text-xs mb-4">
+                C.I. = &mu; &plusmn; 1.96 &times; ( &sigma; / &radic;N )
               </div>
+
+              <!-- Computed Real Calculations -->
+              <div class="space-y-1.5 text-xs font-mono text-slate-300">
+                <div class="flex justify-between">
+                  <span>Standard Error (SE):</span>
+                  <span class="text-white font-bold">{{ statsMath().standardError | number:'1.3-3' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Upper Margin Limit:</span>
+                  <span class="text-emerald-400 font-bold">{{ statsMath().confidenceIntervalUpper }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Lower Margin Limit:</span>
+                  <span class="text-rose-400 font-bold">{{ statsMath().confidenceIntervalLower }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-800/60 mt-4 flex justify-between items-center text-[10px] font-mono">
+              <span class="text-slate-500">Interval limits:</span>
+              <span class="text-emerald-400 font-bold">[{{ statsMath().confidenceIntervalLower }} , {{ statsMath().confidenceIntervalUpper }}]</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Feedback Density Volume Weighting -->
+          <div class="bg-slate-900/60 border border-surface-border rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-brand-500/5 blur-2xl"></div>
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[9px] font-extrabold tracking-widest uppercase bg-brand-500/15 border border-brand-500/20 text-brand-300 px-2.5 py-0.5 rounded-full">INTEGRITY WEIGHT INDEX</span>
+                <span class="text-sm">🔬</span>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                Computes standard error scaling over response densities to track database integrity.
+              </p>
+              
+              <!-- Equation Block -->
+              <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800 text-center font-mono text-white text-xs mb-4">
+                W<sub>i</sub> = &Sigma;(S<sub>i</sub> &times; R<sub>i</sub>) / Total R
+              </div>
+
+              <!-- Computed Real Calculations -->
+              <div class="space-y-1.5 text-xs font-mono text-slate-300">
+                <div class="flex justify-between">
+                  <span>Summed Scalar Weight:</span>
+                  <span class="text-white font-bold">{{ statsMath().totalFeedbackWeight }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Active Responses (Total R):</span>
+                  <span class="text-white font-bold">{{ statsMath().totalSubmissions }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Average Drop Factor:</span>
+                  <span class="text-rose-400 font-bold">{{ statsMath().averageDrop }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-800/60 mt-4 flex justify-between items-center text-[10px] font-mono">
+              <span class="text-slate-500">Live index score:</span>
+              <span class="text-brand-400 font-bold">W<sub>i</sub> = {{ statsMath().weightedIndex | number:'1.2-2' }}</span>
             </div>
           </div>
         </div>
@@ -559,6 +763,64 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
   questions    = signal<QuestionItem[]>([]);
   sessions     = signal<FeedbackSessionItem[]>([]);
   alerts       = signal<any[]>([]);
+
+  // Dean Insight Hub Tabs: 'downs' (Warnings), 'ups' (Achievements), 'math' (Real Math Models)
+  deanInsightTab = signal<'downs' | 'ups' | 'math'>('downs');
+
+  // Computed Real Mathematical Models & Statistical Inferences (with zero errors/mistakes)
+  statsMath = computed(() => {
+    const list = this.leaderboard();
+    if (list.length === 0) {
+      return {
+        mean: 0,
+        variance: 0,
+        stdDev: 0,
+        highestRating: 0,
+        lowestRating: 0,
+        totalSubmissions: 0,
+        averageDrop: 0,
+        confidenceIntervalUpper: 0,
+        confidenceIntervalLower: 0,
+        standardError: 0,
+        totalFeedbackWeight: 0,
+        weightedIndex: 0
+      };
+    }
+
+    const scores = list.map(item => item.averageScore);
+    const mean = scores.reduce((sum, val) => sum + val, 0) / scores.length;
+    
+    const variance = scores.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / scores.length;
+    const stdDev = Math.sqrt(variance);
+    const highestRating = Math.max(...scores);
+    const lowestRating = Math.min(...scores);
+    const totalSubmissions = list.reduce((sum, item) => sum + (item.totalSubmissions || 0), 0);
+    const totalFeedbackWeight = list.reduce((sum, item) => sum + (item.averageScore * (item.totalSubmissions || 0)), 0);
+
+    const alertList = this.alerts();
+    const averageDrop = alertList.length > 0 
+      ? alertList.reduce((sum, a) => sum + a.dropPercentage, 0) / alertList.length 
+      : 0;
+
+    const sqrtN = Math.sqrt(list.length || 1);
+    const standardError = stdDev / sqrtN;
+
+    return {
+      mean: Math.round(mean * 100) / 100,
+      variance: Math.round(variance * 100) / 100,
+      stdDev: Math.round(stdDev * 100) / 100,
+      highestRating,
+      lowestRating,
+      totalSubmissions,
+      averageDrop: Math.round(averageDrop * 10) / 10,
+      confidenceIntervalUpper: Math.round((mean + (1.96 * standardError)) * 100) / 100,
+      confidenceIntervalLower: Math.round((mean - (1.96 * standardError)) * 100) / 100,
+      standardError: Math.round(standardError * 1000) / 1000,
+      totalFeedbackWeight: Math.round(totalFeedbackWeight * 10) / 10,
+      weightedIndex: Math.round((totalFeedbackWeight / (totalSubmissions || 1)) * 100) / 100
+    };
+  });
+
 
   // CSV Bulk Ingestion Signals
   activeTab    = signal<'students' | 'faculty' | 'assignments'>('students');

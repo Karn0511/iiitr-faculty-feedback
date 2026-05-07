@@ -288,28 +288,8 @@ interface CarouselSlide {
                 <span>⚠️</span> <span>{{ error() }}</span>
               </div>
 
-              <!-- Action Row: Theme Toggle + Sign In Button -->
-              <div class="flex items-center gap-3">
-
-                <!-- Day / Night Mode Toggle (left of sign-in) -->
-                <button type="button" (click)="toggleTheme()"
-                        title="Toggle day / night mode"
-                        class="flex-shrink-0 w-12 h-12 rounded-xl border transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand-500/40"
-                        [ngClass]="isDarkMode() ? 'border-slate-700/60 bg-slate-900/50 hover:border-brand-500/40 hover:bg-slate-800/60' : 'border-amber-400/40 bg-amber-50/10 hover:border-amber-400/60 hover:bg-amber-50/20'">
-                  <!-- Moon (dark mode) -->
-                  <svg *ngIf="isDarkMode()" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                  </svg>
-                  <!-- Sun (light mode) -->
-                  <svg *ngIf="!isDarkMode()" class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
-                  </svg>
-                </button>
-
                 <!-- Sign In Button -->
-                <button type="submit" class="btn-primary flex-1 py-3.5 text-xs font-black uppercase tracking-wider rounded-xl shadow-glow shadow-brand-500/20" [disabled]="loading() || loginForm.invalid">
+                <button type="submit" class="btn-primary w-full py-3.5 text-xs font-black uppercase tracking-wider rounded-xl shadow-glow shadow-brand-500/20" [disabled]="loading() || loginForm.invalid">
                   <svg *ngIf="loading()" class="w-4 h-4 animate-spin inline mr-2 text-white" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -317,7 +297,6 @@ interface CarouselSlide {
                   {{ loading() ? 'Authenticating...' : 'Secure Sign In' }}
                 </button>
 
-              </div>
             </form>
 
             <!-- FORM: Phone OTP Sign In (If not admin) -->
@@ -755,9 +734,6 @@ export class LoginComponent implements OnInit, AfterViewInit {
   // Sandbox profile random label (updates on each autofill tap)
   sandboxLabel   = signal<string>('Tap to auto-fill a random account');
 
-  // Theme toggle (dark/light mode)
-  isDarkMode     = signal<boolean>(true);
-
   // Left Panel features slides carousel
   activeSlideIndex = signal(0);
   slides: CarouselSlide[] = [
@@ -992,17 +968,6 @@ export class LoginComponent implements OnInit, AfterViewInit {
         }, 900);
       }
     }, 160);
-  }
-
-  toggleTheme() {
-    const isDark = this.isDarkMode();
-    this.isDarkMode.set(!isDark);
-    // Toggle the theme class on the document root
-    if (isDark) {
-      document.documentElement.classList.add('theme-academic');
-    } else {
-      document.documentElement.classList.remove('theme-academic');
-    }
   }
 
   onSendOtp() {

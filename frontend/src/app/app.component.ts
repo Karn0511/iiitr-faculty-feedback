@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { SpinnerComponent } from './shared/components/spinner/spinner.component';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -16,12 +17,14 @@ import { SpinnerComponent } from './shared/components/spinner/spinner.component'
   `
 })
 export class AppComponent implements OnInit {
+  // Inject ThemeService to trigger dark-mode enforcement at app startup
+  private _theme = inject(ThemeService);
+
   async ngOnInit() {
     try {
       const { StatusBar, StatusBarStyle } = await import('@capacitor/status-bar');
-      // Default to Dark Status Bar for our cyber dark mode platform
       await StatusBar.setStyle({ style: StatusBarStyle.Dark });
-      await StatusBar.setBackgroundColor({ color: '#0f172a' }); // Deep slate surface color matching body background
+      await StatusBar.setBackgroundColor({ color: '#0f172a' });
     } catch (err) {
       // Gracefully bypass on web browser
     }

@@ -1,18 +1,27 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
+import { authGuard }   from './core/guards/auth.guard';
+import { noAuthGuard } from './core/guards/no-auth.guard';
 
 export const routes: Routes = [
-  // Root → redirect to login
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  // Root → smart redirect: dashboard if logged in, login if not
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [noAuthGuard],
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then(m => m.LoginComponent)
+  },
 
-  // ── Public: Login & Signup
+  // ── Public: Login & Signup (blocked for logged-in users)
   {
     path: 'login',
+    canActivate: [noAuthGuard],
     loadComponent: () =>
       import('./features/auth/login/login.component').then(m => m.LoginComponent)
   },
   {
     path: 'signup',
+    canActivate: [noAuthGuard],
     loadComponent: () =>
       import('./features/auth/signup/signup.component').then(m => m.SignupComponent)
   },

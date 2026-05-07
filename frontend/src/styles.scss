@@ -9,7 +9,7 @@
    SIGNAL THEME ENGINE & CSS VARIABLES
    ============================================================ */
 :root {
-  /* Default / Night Mode (Cyber Academic) */
+  /* Default: Dark (Cyber Academic) — LOCKED as primary theme */
   --brand-500: #6366f1;
   --brand-400: #818cf8;
   --surface-default: #0f172a;
@@ -18,17 +18,17 @@
   --surface-hover: #253347;
   --text-primary: #e2e8f0;
   --text-secondary: #94a3b8;
-  
+
   &.theme-academic {
-    /* Day Mode (Academic Clean) */
-    --brand-500: #2563eb;
-    --brand-400: #3b82f6;
-    --surface-default: #f8fafc;
-    --surface-card: #ffffff;
-    --surface-border: #e2e8f0;
-    --surface-hover: #f1f5f9;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
+    /* Light Mode: Soft Dark Gray (NOT bright white — slightly lifted dark) */
+    --brand-500: #6366f1;
+    --brand-400: #818cf8;
+    --surface-default: #1a2235;
+    --surface-card: #1e2d42;
+    --surface-border: #2d3f56;
+    --surface-hover: #243048;
+    --text-primary: #cbd5e1;
+    --text-secondary: #8899aa;
   }
 }
 
