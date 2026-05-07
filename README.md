@@ -258,4 +258,4 @@ GEMINI_API_KEY=your_gemini_api_key
 
 ## License
 
- — Built with ❤️ for IIIT Ranchi
+Ashutosh Karn — Built with ❤️ for IIIT Ranchi

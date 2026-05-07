@@ -25,7 +25,7 @@ const sendTokenResponse = (user, statusCode, res, message = 'Authentication succ
         expires:  new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
         httpOnly: true, // Not accessible via JS — XSS protection
         secure:   process.env.NODE_ENV === 'production',       // HTTPS only in prod
-        sameSite: 'strict'                                     // CSRF protection
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     };
 
     res.cookie('jwt', token, cookieOptions);
@@ -33,6 +33,7 @@ const sendTokenResponse = (user, statusCode, res, message = 'Authentication succ
     res.status(statusCode).json({
         success: true,
         message,
+        token, // Exposing the token in the body so that the Bearer authInterceptor can store and attach it
         data: {
             user: {
                 id:    user._id,
@@ -42,7 +43,6 @@ const sendTokenResponse = (user, statusCode, res, message = 'Authentication succ
                 section: user.section || null,
                 avatar:  user.avatar  || null
             }
-            // Token lives in the cookie — never exposed in body
         }
     });
 };
@@ -59,7 +59,7 @@ exports.loginSuccessHandler = (req, res) => {
         expires:  new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
         httpOnly: true,
         secure:   process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     };
 
     res.cookie('jwt', token, cookieOptions);
