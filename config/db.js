@@ -1,15 +1,15 @@
 const mongoose = require('mongoose');
 
+// strictQuery must be set globally in Mongoose 7+/8+/9+
+mongoose.set('strictQuery', true);
+
 const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(process.env.MONGO_URI, {
-            // Mongoose 6+ no longer requires useNewUrlParser, useUnifiedTopology, etc.
-            // but we ensure strict query mode for safety
-            strictQuery: true 
-        });
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
+        const conn = await mongoose.connect(process.env.MONGO_URI);
+        console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+        console.log(`   Database: ${conn.connection.name}`);
     } catch (error) {
-        console.error(`Error connecting to MongoDB: ${error.message}`);
+        console.error(`❌ MongoDB Connection Error: ${error.message}`);
         process.exit(1);
     }
 };
