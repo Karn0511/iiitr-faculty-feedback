@@ -37,7 +37,9 @@ app.use(passport.initialize());
 // ============================================================
 // API ROUTES
 // ============================================================
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth',  require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
+
 
 // ============================================================
 // HEALTH CHECK
