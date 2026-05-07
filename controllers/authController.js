@@ -50,9 +50,31 @@ const sendTokenResponse = (user, statusCode, res, message = 'Authentication succ
 // Exported for use in Google OAuth callback route
 exports.loginSuccessHandler = (req, res) => {
     if (!req.user) {
-        return res.status(401).json({ success: false, message: 'Authentication failed' });
+        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:4200'}/login?error=Google%20Authentication%20failed`);
     }
-    sendTokenResponse(req.user, 200, res);
+
+    const token = signToken(req.user);
+
+    const cookieOptions = {
+        expires:  new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+        httpOnly: true,
+        secure:   process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    };
+
+    res.cookie('jwt', token, cookieOptions);
+
+    const userString = encodeURIComponent(JSON.stringify({
+        id:      req.user._id,
+        name:    req.user.name,
+        email:   req.user.email,
+        role:    req.user.role,
+        section: req.user.section || null,
+        avatar:  req.user.avatar  || null
+    }));
+
+    // Redirect to frontend app login route to consume token and user variables
+    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:4200'}/login?token=${token}&user=${userString}`);
 };
 
 // ============================================================

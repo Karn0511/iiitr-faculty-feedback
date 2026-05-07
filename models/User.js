@@ -63,10 +63,9 @@ const userSchema = new mongoose.Schema({
 // PRE-SAVE HOOK: Hash password with bcrypt (salt rounds: 12)
 // Only runs when the password field has been modified.
 // =============================================================
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+userSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
     this.password = await bcrypt.hash(this.password, 12);
-    next();
 });
 
 // Instance method: verify a plain-text password against the stored hash

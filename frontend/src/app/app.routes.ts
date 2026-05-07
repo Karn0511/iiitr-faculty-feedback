@@ -5,11 +5,16 @@ export const routes: Routes = [
   // Root → redirect to login
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 
-  // ── Public: Login
+  // ── Public: Login & Signup
   {
     path: 'login',
     loadComponent: () =>
       import('./features/auth/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'signup',
+    loadComponent: () =>
+      import('./features/auth/signup/signup.component').then(m => m.SignupComponent)
   },
 
   // ── Protected: Admin portal (lazy)
