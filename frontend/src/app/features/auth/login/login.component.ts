@@ -34,15 +34,13 @@ interface CarouselSlide {
           <div class="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-brand-600/15 blur-[60px] pointer-events-none"></div>
 
           <!-- Brand Header -->
-          <div class="relative z-10 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center shadow-brand">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-              </svg>
+          <div class="relative z-10 flex items-center gap-3.5">
+            <div class="w-11 h-11 flex items-center justify-center">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Indian_Institute_of_Information_Technology%2C_Ranchi_Logo.png" class="w-10 h-10 object-contain" alt="IIIT Ranchi Official Logo" />
             </div>
             <div>
-              <h2 class="text-white font-extrabold text-base tracking-tight leading-none">IIIT Ranchi</h2>
-              <span class="text-brand-400 text-xs font-semibold tracking-wider">FEEDBACK PORTAL</span>
+              <h2 class="text-white font-black text-base tracking-tight leading-none">IIIT Ranchi</h2>
+              <span class="text-brand-400 text-[10px] font-bold tracking-wider uppercase">FEEDBACK PORTAL</span>
             </div>
           </div>
 
@@ -52,9 +50,8 @@ interface CarouselSlide {
               <div class="absolute inset-0 border-2 border-dashed border-brand-500/30 rounded-full animate-spin-slow"></div>
               <div class="absolute inset-4 border border-violet-500/20 rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 8s;"></div>
               <div class="absolute inset-8 border border-dashed border-cyan-500/30 rounded-full animate-spin-slow" style="animation-duration: 12s"></div>
-              <div class="w-28 h-28 rounded-2xl bg-slate-900 border border-surface-border flex flex-col items-center justify-center shadow-glow">
-                <span class="text-3xl">🇮🇳</span>
-                <span class="text-[10px] font-extrabold text-slate-400 mt-2 font-mono">IIIT RANCHI</span>
+              <div class="w-28 h-28 rounded-full bg-slate-950 border border-surface-border flex items-center justify-center shadow-glow p-4">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Indian_Institute_of_Information_Technology%2C_Ranchi_Logo.png" class="w-16 h-16 object-contain animate-pulse-brand" alt="IIIT Ranchi Official Emblem" />
               </div>
             </div>
 
@@ -240,8 +237,8 @@ interface CarouselSlide {
             <div class="flex-1 h-px bg-surface-border"></div>
           </div>
 
-          <!-- Social login button (Trigger developer sandbox OAuth directly) -->
-          <button (click)="openGoogleOAuthModal()" class="btn-ghost w-full py-3 rounded-xl flex items-center justify-center gap-3 font-semibold text-sm hover:scale-[1.01] transition-transform">
+          <!-- Social login button (Redirects to real institutional Google OAuth gateway) -->
+          <button (click)="loginWithGoogle()" class="btn-ghost w-full py-3 rounded-xl flex items-center justify-center gap-3 font-semibold text-sm hover:scale-[1.01] transition-transform">
             <svg class="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#ea4335" d="M12 5.04c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.76 14.97.67 12 .67 7.7.67 3.99 3.14 2.18 6.74l3.66 2.84c.87-2.6 3.3-4.54 6.16-4.54z"/>
               <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31l3.57 2.77c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -259,58 +256,6 @@ interface CarouselSlide {
       </div>
     </div>
 
-    <!-- GOOGLE OAUTH SIMULATOR MODAL (Solves the invalid_client issue gracefully!) -->
-    <div *ngIf="showGoogleModal()" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(15,23,42,0.8); backdrop-filter: blur(8px);">
-      <div class="glass-card w-full max-w-md p-6 sm:p-8 animate-scale-in">
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
-          <div class="flex items-center gap-2.5">
-            <span class="text-2xl">🌐</span>
-            <div>
-              <h3 class="text-white font-extrabold text-base">Google OAuth Simulator</h3>
-              <p class="text-brand-400 text-[10px] font-bold uppercase tracking-wider">IIIT Ranchi Identity Gateway</p>
-            </div>
-          </div>
-          <button (click)="closeGoogleOAuthModal()" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
-        </div>
-
-        <div class="p-3 rounded-xl bg-brand-500/5 border border-brand-500/20 text-brand-300 text-xs mb-6 leading-relaxed">
-          <strong>💡 Developer Mode:</strong> Real Google Auth returned 401 client mismatch (sandbox restriction). Use this institutional OAuth emulator to simulate Google's profile verification and identity callbacks.
-        </div>
-
-        <div class="space-y-3">
-          <button (click)="simulateGoogleAuth('student')"
-                  class="w-full flex items-center justify-between p-4 rounded-xl border border-surface-border bg-slate-950/60 hover:bg-brand-500/10 hover:border-brand-500/40 transition-all text-left">
-            <div>
-              <p class="text-white font-bold text-sm">Karn Ashutosh (Student)</p>
-              <p class="text-slate-400 text-xs">karnashutosh6&#64;iiitranchi.ac.in</p>
-            </div>
-            <span class="text-xs bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded-full font-bold">SELECT</span>
-          </button>
-
-          <button (click)="simulateGoogleAuth('faculty')"
-                  class="w-full flex items-center justify-between p-4 rounded-xl border border-surface-border bg-slate-950/60 hover:bg-emerald-500/10 hover:border-emerald-500/40 transition-all text-left">
-            <div>
-              <p class="text-white font-bold text-sm">Dr. Amit Kumar (Faculty)</p>
-              <p class="text-slate-400 text-xs">faculty.amit&#64;iiitranchi.ac.in</p>
-            </div>
-            <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">SELECT</span>
-          </button>
-
-          <button (click)="simulateGoogleAuth('admin')"
-                  class="w-full flex items-center justify-between p-4 rounded-xl border border-surface-border bg-slate-950/60 hover:bg-violet-500/10 hover:border-violet-500/40 transition-all text-left">
-            <div>
-              <p class="text-white font-bold text-sm">Feedback Administrator (Admin)</p>
-              <p class="text-slate-400 text-xs">admin.feedback&#64;iiitranchi.ac.in</p>
-            </div>
-            <span class="text-xs bg-violet-500/20 text-violet-300 px-2 py-0.5 rounded-full font-bold">SELECT</span>
-          </button>
-        </div>
-
-        <p class="text-center text-[10px] text-slate-500 mt-6 leading-relaxed">
-          Simulated Google Profile claims are encrypted into stateless JWT tokens conforming to IIIT Ranchi security protocols.
-        </p>
-      </div>
-    </div>
   `
 })
 export class LoginComponent implements OnInit {
@@ -484,53 +429,8 @@ export class LoginComponent implements OnInit {
     }, 1500);
   }
 
-  // Developer Modal Google Trigger
-  openGoogleOAuthModal() {
-    this.showGoogleModal.set(true);
-  }
-
-  closeGoogleOAuthModal() {
-    this.showGoogleModal.set(false);
-  }
-
-  simulateGoogleAuth(role: 'student' | 'faculty' | 'admin') {
-    this.closeGoogleOAuthModal();
-    this.spinner.show();
-
-    setTimeout(() => {
-      this.spinner.hide();
-      const profiles = {
-        student: {
-          id: 'google_stu_123',
-          name: 'Karn Ashutosh',
-          email: 'karnashutosh6@iiitranchi.ac.in',
-          role: 'Student',
-          section: 'A',
-          avatar: 'https://lh3.googleusercontent.com/a/default-user'
-        },
-        faculty: {
-          id: 'google_fac_123',
-          name: 'Dr. Amit Kumar',
-          email: 'faculty.amit@iiitranchi.ac.in',
-          role: 'Faculty',
-          avatar: 'https://lh3.googleusercontent.com/a/default-user'
-        },
-        admin: {
-          id: 'google_adm_123',
-          name: 'Feedback Admin',
-          email: 'admin.feedback@iiitranchi.ac.in',
-          role: 'Admin',
-          avatar: 'https://lh3.googleusercontent.com/a/default-user'
-        }
-      };
-
-      const sel = profiles[role];
-
-      this.auth.handleAuthSuccess({
-        token: `simulated_google_token_${role}`,
-        data: { user: sel }
-      });
-      this.auth.redirectByRole();
-    }, 1200);
+  // Trigger Real Google OAuth 2.0 flow
+  loginWithGoogle() {
+    this.auth.loginWithGoogle();
   }
 }
