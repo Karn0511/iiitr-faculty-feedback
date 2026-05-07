@@ -105,7 +105,8 @@ const connectDB = async () => {
                 await Assignment.create({
                     facultyId: facultyUser._id,
                     courseId: course._id,
-                    section: 'A'
+                    section: 'A',
+                    semester: 1
                 });
                 console.log('🌱 Seeded Assignment: Dr. Amit Kumar -> CS101 (Section A)');
             }

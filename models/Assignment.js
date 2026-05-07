@@ -18,7 +18,8 @@ const assignmentSchema = new mongoose.Schema({
     },
     semester: {
         type: Number,
-        required: [true, 'Semester is required']
+        required: [true, 'Semester is required'],
+        default: 1
     }
 }, {
     timestamps: true
