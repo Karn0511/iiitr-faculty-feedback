@@ -16,7 +16,7 @@ interface CarouselSlide {
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule],
   template: `
-    <div class="min-h-screen w-full flex items-center justify-center relative p-4 sm:p-6 overflow-y-auto py-12 bg-[#020617] text-slate-200">
+    <div class="min-h-screen w-full flex items-center justify-center relative p-4 sm:p-6 overflow-y-auto py-12 bg-transparent text-slate-200">
 
       <!-- 1. Immersive aurora background grid and floating blobs with Mesh Shader -->
       <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
@@ -48,11 +48,12 @@ interface CarouselSlide {
           <div class="relative z-10 flex flex-col items-center justify-center text-center py-2">
             <div class="relative w-40 h-40 lg:w-48 lg:h-48 xl:w-56 xl:h-56 shrink-0 flex items-center justify-center">
               
-              <!-- Large Outer Boundary Ring (like the text border in the real logo) -->
-              <div class="absolute w-52 h-52 lg:w-60 lg:h-60 xl:w-72 xl:h-72 rounded-full border-[1px] border-slate-700/50 flex items-center justify-center pointer-events-none z-0">
+              <!-- Large Outer Boundary Ring (Mathematically concentric via inset) -->
+              <div class="absolute inset-[-24px] lg:inset-[-28px] xl:inset-[-36px] rounded-full flex items-center justify-center pointer-events-none z-0">
                 <div class="absolute inset-0 rounded-full border-[1px] border-dashed border-slate-500/30 spin-reverse" style="animation-duration: 40s;"></div>
                 <div class="absolute inset-[-10px] rounded-full border-[1px] border-dotted border-slate-600/40 spin-fast" style="animation-duration: 60s;"></div>
               </div>
+              
               <!-- 3D Atomic Orbits -->
               <div class="orbit-container absolute inset-0">
                 <!-- Red Orbit -->
@@ -69,9 +70,9 @@ interface CarouselSlide {
               </div>
               
               <!-- Refined Floating Center Logo -->
-              <div class="relative z-20 w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.3)] p-3 backdrop-blur-md">
-                <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                  <img src="/logo.png" class="w-10 h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 object-contain hover:scale-110 transition-transform duration-500" alt="IIIT Ranchi Emblem" />
+              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-24 h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_35px_rgba(59,130,246,0.25)] p-3 backdrop-blur-md">
+                <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-1">
+                  <img src="/logo.png" class="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 object-contain hover:scale-110 transition-transform duration-500" alt="IIIT Ranchi Emblem" />
                 </div>
               </div>
             </div>
@@ -103,7 +104,7 @@ interface CarouselSlide {
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
-              Gemini AI Audited
+              Quality Evaluated
             </div>
           </div>
         </div>
@@ -126,9 +127,9 @@ interface CarouselSlide {
               </div>
               
               <!-- Compact Floating Center Logo -->
-              <div class="relative z-20 w-14 h-14 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-md p-1.5 backdrop-blur-sm">
-                <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                  <img src="/logo.png" class="w-9 h-9 object-contain" alt="IIIT Ranchi Logo" />
+              <div class="relative z-20 w-20 h-20 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-lg p-2.5 backdrop-blur-sm">
+                <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-0.5">
+                  <img src="/logo.png" class="w-14 h-14 object-contain" alt="IIIT Ranchi Logo" />
                 </div>
               </div>
             </div>
@@ -419,25 +420,33 @@ interface CarouselSlide {
             {{ bootingRole() === 'student' ? '🎓 Student Portal' : bootingRole() === 'faculty' ? '👨‍🏫 Faculty Portal' : '🛡️ Admin Control Panel' }}
           </div>
 
-          <!-- Logo with role-coloured glow ring -->
-          <div class="relative flex items-center justify-center">
-            <!-- Outer ping ring -->
-            <div class="absolute w-32 h-32 rounded-full border animate-ping"
-                 style="animation-duration: 2.8s;"
+          <!-- Orbit Rings & Logo -->
+          <div class="relative w-40 h-40 mb-8 flex items-center justify-center mx-auto">
+            
+            <!-- Pulsing Aura Ring (Outer) -->
+            <div class="absolute inset-0 pointer-events-none">
+              <div class="w-full h-full rounded-full animate-ping opacity-20"
+                   style="animation-duration: 3s;"
+                   [ngClass]="{
+                     'bg-brand-500': bootingRole() === 'student',
+                     'bg-emerald-500': bootingRole() === 'faculty',
+                     'bg-violet-500': bootingRole() === 'admin'
+                   }"></div>
+            </div>
+
+            <!-- Orbiting Outer Ring (Slow Spin) -->
+            <div class="absolute inset-0 rounded-full border border-slate-700/50 animate-[spin_8s_linear_infinite]"></div>
+
+            <!-- Spinning Gradient Ring (Inner) -->
+            <div class="absolute inset-4 rounded-full border-2 animate-[spin_2s_linear_infinite]"
                  [ngClass]="{
-                   'border-brand-500/25': bootingRole() === 'student',
-                   'border-emerald-500/25': bootingRole() === 'faculty',
-                   'border-violet-500/25': bootingRole() === 'admin'
+                   'border-brand-500/20 border-t-brand-500': bootingRole() === 'student',
+                   'border-emerald-500/20 border-t-emerald-500': bootingRole() === 'faculty',
+                   'border-violet-500/20 border-t-violet-500': bootingRole() === 'admin'
                  }"></div>
-            <!-- Static ring -->
-            <div class="absolute w-28 h-28 rounded-full border"
-                 [ngClass]="{
-                   'border-brand-500/15': bootingRole() === 'student',
-                   'border-emerald-500/15': bootingRole() === 'faculty',
-                   'border-violet-500/15': bootingRole() === 'admin'
-                 }"></div>
-            <!-- Logo bubble -->
-            <div class="w-22 h-22 w-[88px] h-[88px] rounded-full bg-slate-900/90 border border-slate-700/60 flex items-center justify-center"
+
+            <!-- Logo Bubble -->
+            <div class="relative z-10 w-[88px] h-[88px] rounded-full bg-slate-900/90 border border-slate-700/60 flex items-center justify-center shadow-lg"
                  [ngStyle]="{
                    'box-shadow': bootingRole() === 'student'
                      ? '0 0 40px rgba(99,102,241,0.35), 0 0 80px rgba(99,102,241,0.12)'
@@ -459,20 +468,22 @@ interface CarouselSlide {
 
           <!-- Role-aware progress bar -->
           <div class="w-80 space-y-3">
-            <div class="w-full h-[3px] bg-slate-800/80 rounded-full overflow-hidden">
+            <div class="w-full h-[5px] bg-slate-800/80 rounded-full overflow-hidden">
               <div class="h-full rounded-full transition-all duration-200 ease-out"
                    [style.width.%]="bootProgress()"
-                   [ngClass]="{
-                     'bg-gradient-to-r from-brand-600 via-brand-400 to-violet-400': bootingRole() === 'student',
-                     'bg-gradient-to-r from-emerald-600 via-emerald-400 to-cyan-400': bootingRole() === 'faculty',
-                     'bg-gradient-to-r from-violet-600 via-brand-500 to-cyan-500': bootingRole() === 'admin'
-                   }"></div>
+                   [style.background]="
+                     bootingRole() === 'student'
+                       ? 'linear-gradient(90deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)'
+                       : bootingRole() === 'faculty'
+                       ? 'linear-gradient(90deg, #059669 0%, #10b981 50%, #2dd4bf 100%)'
+                       : 'linear-gradient(90deg, #7c3aed 0%, #8b5cf6 50%, #d946ef 100%)'
+                   "></div>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest">Initializing</span>
               <span class="text-[10px] font-mono font-black tabular-nums"
                     [ngClass]="{
-                      'text-brand-400': bootingRole() === 'student',
+                      'text-indigo-400': bootingRole() === 'student',
                       'text-emerald-400': bootingRole() === 'faculty',
                       'text-violet-400': bootingRole() === 'admin'
                     }">{{ bootProgress() }}%</span>
@@ -492,7 +503,7 @@ interface CarouselSlide {
               &rsaquo; Fetching course registry &amp; semester assignments...
             </span>
             <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && bootingRole() === 'faculty'" class="text-emerald-400 animate-pulse">
-              &rsaquo; Loading feedback analytics &amp; AI sentiment engine...
+              &rsaquo; Loading feedback analytics &amp; written comments...
             </span>
             <span *ngIf="bootProgress() >= 30 && bootProgress() < 65 && bootingRole() === 'admin'" class="text-violet-400 animate-pulse">
               &rsaquo; Opening control terminal &amp; validating session locks...
@@ -522,6 +533,58 @@ interface CarouselSlide {
       background-color: #020617;
       overflow: hidden;
     }
+    :host-context(.theme-academic) {
+      background-color: transparent !important;
+      
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.65) !important;
+        backdrop-filter: blur(16px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.8) !important;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08) !important;
+      }
+      [class*="bg-slate-950/40"] {
+        background: rgba(255, 255, 255, 0.75) !important;
+        border: 1px solid rgba(15, 23, 42, 0.08) !important;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04), 0 2px 4px rgba(15, 23, 42, 0.02) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 1) !important;
+          transform: translateY(-5px) !important;
+          border-color: rgba(99, 102, 241, 0.25) !important;
+          box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08), 0 5px 15px rgba(15, 23, 42, 0.04) !important;
+        }
+      }
+      [class*="bg-slate-900/10"] {
+        background: rgba(255, 255, 255, 0.3) !important;
+      }
+      [class*="bg-slate-950/80"] {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-color: rgba(15, 23, 42, 0.08) !important;
+      }
+      .border-slate-800 {
+        border-color: rgba(15, 23, 42, 0.08) !important;
+      }
+      .bg-slate-950 {
+        background: rgba(241, 245, 249, 0.8) !important;
+        border-color: rgba(15, 23, 42, 0.1) !important;
+      }
+      input {
+        background: #ffffff !important;
+        border: 1px solid rgba(15, 23, 42, 0.12) !important;
+        color: #0f172a !important;
+        &:focus {
+          border-color: #6366f1 !important;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+        }
+      }
+      .text-slate-400 {
+        color: #475569 !important;
+      }
+      .text-slate-500 {
+        color: #64748b !important;
+      }
+    }
     .bg-grid {
       position: absolute;
       inset: 0;
@@ -531,6 +594,11 @@ interface CarouselSlide {
       mask-image: radial-gradient(circle at center, black 10%, transparent 85%);
       pointer-events: none;
       opacity: 0.18;
+    }
+    :host-context(.theme-academic) .bg-grid {
+      opacity: 0.06 !important;
+      background-image: linear-gradient(to right, #64748b 1px, transparent 1px),
+                        linear-gradient(to bottom, #64748b 1px, transparent 1px) !important;
     }
     .aurora-blob {
       position: absolute;
@@ -542,6 +610,9 @@ interface CarouselSlide {
       animation: blob-float 18s infinite alternate ease-in-out;
       pointer-events: none;
     }
+    :host-context(.theme-academic) .aurora-blob {
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%) !important;
+    }
     .aurora-blob-2 {
       position: absolute;
       width: 45vw;
@@ -551,6 +622,9 @@ interface CarouselSlide {
       border-radius: 50%;
       animation: blob-float 22s infinite alternate-reverse ease-in-out;
       pointer-events: none;
+    }
+    :host-context(.theme-academic) .aurora-blob-2 {
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.04) 0%, transparent 70%) !important;
     }
     .glass-panel {
       background: rgba(15, 23, 42, 0.35);
@@ -745,12 +819,12 @@ export class LoginComponent implements OnInit, AfterViewInit {
     {
       title: 'Double Anonymity Safeguard',
       subtitle: 'Privacy Guarantee',
-      desc: 'All ratings and text comments undergo structural de-identification, isolating response data completely from student records.'
+      desc: 'All ratings and written comments are stored anonymously, separating response data completely from student accounts.'
     },
     {
-      title: 'Gemini AI Insights Layer',
-      subtitle: 'Advanced Analysis',
-      desc: 'Google Gemini 1.5 analyzes text reviews to present constructive sentiment summaries to faculty while keeping comments 100% anonymized.'
+      title: 'Detailed Evaluation Metrics',
+      subtitle: 'Academic Analytics',
+      desc: 'Instructors can review detailed structured performance indicators across key questionnaire aspects to continuously refine teaching approaches.'
     }
   ];
 
@@ -953,7 +1027,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   // Play full-screen progressive sessional boot transitions
   showBootingScreen(role: string) {
-    this.bootingRole.set(role); // Stamp the REAL authenticated role for boot screen
+    this.bootingRole.set(role.toLowerCase()); // Stamp the REAL authenticated role for boot screen
     this.isBootingApp = true;
     this.bootProgress.set(0);
 

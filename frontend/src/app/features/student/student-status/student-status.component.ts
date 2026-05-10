@@ -18,9 +18,9 @@ import { AuthService } from '../../../core/services/auth.service';
       <div class="relative overflow-hidden rounded-3xl bg-slate-950/60 border border-surface-border p-8 shadow-glow flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
           <span class="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">VERIFICATION</span>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-3 tracking-tight">Audit & Status</h1>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-3 tracking-tight">Feedback Status</h1>
           <p class="text-slate-400 text-sm mt-1.5 leading-relaxed max-w-xl">
-            Review your evaluation logs, verify security parameters, and download institutional double-anonymity certificates.
+            Review your submitted feedback status and security features.
           </p>
         </div>
       </div>
@@ -31,47 +31,47 @@ import { AuthService } from '../../../core/services/auth.service';
         <!-- LEFT: Security Compliance (5cols) -->
         <div class="lg:col-span-5 space-y-8">
           <div class="glass-card p-6 sm:p-8 space-y-6">
-            <h2 class="text-white font-extrabold text-base border-b border-surface-border pb-3">Security Checklist</h2>
+            <h2 class="text-white font-extrabold text-base border-b border-surface-border pb-3">Privacy &amp; Security</h2>
             
             <div class="space-y-4">
               <div class="flex items-start gap-3">
                 <span class="text-emerald-400 text-lg">🛡️</span>
                 <div>
-                  <h4 class="text-xs font-bold text-white uppercase tracking-wider">Double-Anonymity Guard</h4>
-                  <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">No tracking tags are persisted. The system separates your auth context from submitted questionnaire rating vectors.</p>
+                  <h4 class="text-xs font-bold text-white uppercase tracking-wider">Student Privacy Guard</h4>
+                  <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Your identity is never linked to your feedback. The system separates your student account details from your answers.</p>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
                 <span class="text-emerald-400 text-lg">🔑</span>
                 <div>
-                  <h4 class="text-xs font-bold text-white uppercase tracking-wider">Cryptographic Insulation</h4>
-                  <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Evaluation payloads are compiled using one-way cryptographic tokens. Neither faculty nor administrative observers can reverse-map responses.</p>
+                  <h4 class="text-xs font-bold text-white uppercase tracking-wider">Secure Submissions</h4>
+                  <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">All answers are sent using secure tokens. Neither faculty nor admins can trace which student submitted which response.</p>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
                 <span class="text-emerald-400 text-lg">🔒</span>
                 <div>
-                  <h4 class="text-xs font-bold text-white uppercase tracking-wider">Server-Side Sandbox</h4>
-                  <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Completed feedback runs on insulated backend processors to strictly limit horizontal cross-site scraping attempts.</p>
+                  <h4 class="text-xs font-bold text-white uppercase tracking-wider">Protected Servers</h4>
+                  <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">All evaluation data is stored on secure, protected servers to prevent unauthorized access.</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT: Verified Progression Standings (7cols) -->
+        <!-- RIGHT: Feedback Submission Status (7cols) -->
         <div class="lg:col-span-7">
           <div class="glass-card p-6 sm:p-8 space-y-4">
             <h2 class="text-white font-extrabold text-base border-b border-surface-border pb-3 flex items-center justify-between">
-              <span>Verified Submissions Audit</span>
+              <span>Feedback Submission Status</span>
               <span class="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded font-bold uppercase">SECURE PORTAL</span>
             </h2>
 
             <div *ngIf="loading()" class="text-center py-12 space-y-3">
               <div class="inline-block w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-              <p class="text-slate-500 text-xs font-mono">Retrieving progress index...</p>
+              <p class="text-slate-500 text-xs font-mono">Loading feedback status...</p>
             </div>
 
             <div *ngIf="!loading() && courses().length === 0" class="text-center py-16 text-slate-500 text-xs">

@@ -12,7 +12,7 @@ const passport   = require('./config/passport');
 connectDB();
 
 const app = express();
-app.set('trust proxy', true); // Trust the reverse proxy (Render) to correctly resolve HTTPS redirects
+app.set('trust proxy', 1); // Trust the first hop from the reverse proxy (Render) securely
 
 // ============================================================
 // SECURITY MIDDLEWARE

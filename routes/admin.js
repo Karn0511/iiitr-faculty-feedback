@@ -31,12 +31,7 @@ router.post('/upload/assignments',
     adminController.uploadCourseAssignments
 );
 
-// POST /api/admin/ingest-ai
-// Body: JSON { text: string, type: 'students' | 'faculty' | 'assignments' }
 router.post('/ingest-ai', adminController.processAIIngest);
-
-// POST /api/admin/upload/json/:type
-// Body: JSON { data: array }
 router.post('/upload/json/:type', adminController.uploadBulkJSON);
 
 // ============================================================

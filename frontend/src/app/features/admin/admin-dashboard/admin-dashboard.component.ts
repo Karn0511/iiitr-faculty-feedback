@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal, computed, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, AfterViewInit, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AdminService, AdminStats, FacultyLeaderboardItem, QuestionItem, FeedbackSessionItem } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
@@ -8,10 +9,11 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Global Mesh Background -->
     <canvas #meshCanvas class="fixed inset-0 w-full h-full opacity-[0.1] mix-blend-screen pointer-events-none z-[-1]"></canvas>
-    
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in relative z-10">
 
       <!-- Header Banner -->
@@ -20,11 +22,11 @@ import { FormsModule } from '@angular/forms';
         <div class="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-cyan-500/10 blur-[80px]"></div>
 
         <div class="relative z-10">
-          <span class="text-xs font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">SYSTEM CONTROL</span>
-          <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-3 tracking-tight">Administrative Portal</h1>
+          <span class="text-xs font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">Dashboard</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-3 tracking-tight">Academic Surveys &amp; Feedback Administration</h1>
           <p class="text-slate-400 text-sm mt-1.5 leading-relaxed max-w-xl">
             Welcome, <span class="text-white font-semibold">{{ auth.currentUser()?.name }}</span>.
-            Manage evaluation survey structures, soft-toggle active questionnaire items, monitor sessions, and inspect leaderboards.
+            Manage surveys, questions, feedback sessions, and monitor faculty performance.
           </p>
         </div>
 
@@ -56,7 +58,15 @@ import { FormsModule } from '@angular/forms';
         </div>
       </div>
 
-      <!-- DEAN'S STRATEGIC INSIGHT HUB & REAL MATHEMATICAL ENGINE -->
+      <!-- Quick Analytics Link -->
+      <div class="mb-6">
+        <button (click)="router.navigate(['/admin/analytics'])"
+                class="px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-glow transition-all duration-300 flex items-center gap-2">
+          📊 View Detailed Analytics
+        </button>
+      </div>
+
+      <!-- FEEDBACK PERFORMANCE HUB -->
       <div class="mb-8 animate-fade-in">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-3 border-b border-surface-border">
           <div class="flex items-center gap-2.5">
@@ -65,8 +75,8 @@ import { FormsModule } from '@angular/forms';
               <span class="relative inline-flex rounded-full h-3 w-3 bg-violet-500"></span>
             </span>
             <div>
-              <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Dean's Strategic Insight Hub</h2>
-              <p class="text-[10px] text-slate-500 font-bold uppercase mt-0.5 tracking-wider">Live mathematical computations & sentiment velocity calculations</p>
+              <h2 class="text-sm font-black uppercase tracking-widest text-slate-200">Feedback Performance Overview</h2>
+              <p class="text-[10px] text-slate-500 font-bold uppercase mt-0.5 tracking-wider">Key metrics and performance tracking</p>
             </div>
           </div>
 
@@ -75,17 +85,17 @@ import { FormsModule } from '@angular/forms';
             <button (click)="deanInsightTab.set('downs')"
                     class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200"
                     [ngClass]="deanInsightTab() === 'downs' ? 'bg-rose-500/15 border border-rose-500/30 text-rose-400 font-black' : 'text-slate-400 hover:text-white'">
-              📉 Warning Drops (Downs)
+              📉 Low Ratings
             </button>
             <button (click)="deanInsightTab.set('ups')"
                     class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200"
                     [ngClass]="deanInsightTab() === 'ups' ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-black' : 'text-slate-400 hover:text-white'">
-              🏆 Exceptional (Ups)
+              🏆 Top Performers
             </button>
             <button (click)="deanInsightTab.set('math')"
                     class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200"
                     [ngClass]="deanInsightTab() === 'math' ? 'bg-brand-500/15 border border-brand-500/30 text-brand-400 font-black' : 'text-slate-400 hover:text-white'">
-              📊 Recent Info & calculations
+              📊 Statistics
             </button>
           </div>
         </div>
@@ -93,18 +103,18 @@ import { FormsModule } from '@angular/forms';
         <!-- TAB CONTENT 1: Warning Drops ("downs") -->
         <div *ngIf="deanInsightTab() === 'downs'" class="space-y-4 animate-fade-in">
           <div *ngIf="alerts().length === 0" class="p-6 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center text-slate-500 text-xs">
-            No critical drops (>15%) detected in sentiment velocity calculations over the last 7 days.
+            No significant rating drops detected.
           </div>
 
           <div *ngIf="alerts().length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div *ngFor="let alert of alerts()" 
+            <div *ngFor="let alert of alerts()"
                  class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500/10 via-slate-950/40 to-slate-950/60 border border-rose-500/30 p-5 shadow-glow shadow-rose-500/5 hover:border-rose-500/55 transition-all duration-300 animate-pulse-slow">
               <!-- Pulsing red background blob -->
               <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-rose-500/10 blur-2xl"></div>
 
               <div class="relative z-10 flex items-start justify-between gap-4">
                 <div class="space-y-1">
-                  <span class="text-[9px] font-extrabold tracking-widest uppercase bg-rose-500/15 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full">VELOCITY ALERT</span>
+                  <span class="text-[9px] font-extrabold tracking-widest uppercase bg-rose-500/15 border border-rose-500/20 text-rose-400 px-2 py-0.5 rounded-full">Rating Drop Alert</span>
                   <h3 class="text-sm font-extrabold text-white mt-2 leading-snug">{{ alert.courseId?.courseName }}</h3>
                   <p class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">{{ alert.courseId?.courseCode }}</p>
                 </div>
@@ -112,19 +122,14 @@ import { FormsModule } from '@angular/forms';
                 <!-- Huge drop percentage badge -->
                 <div class="text-right">
                   <div class="text-2xl font-black text-rose-400 font-mono tracking-tighter animate-pulse">-{{ alert.dropPercentage }}%</div>
-                  <div class="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider">Sentiment Drop</div>
+                  <div class="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider">Drop</div>
                 </div>
               </div>
 
-              <!-- Real calculations panel showing formula -->
-              <div class="mt-4 p-2 bg-rose-950/20 border border-rose-950/40 rounded-lg text-[9px] font-mono text-rose-300/80">
-                Formula: ({{ alert.previousScore }} - {{ alert.currentScore }}) / {{ alert.previousScore }} = {{( (alert.previousScore - alert.currentScore) / alert.previousScore) | number:'1.4-4' }} (Drop)
-              </div>
-
-              <!-- Score shift comparative row -->
+              <!-- Score comparison -->
               <div class="relative z-10 mt-3 pt-3 border-t border-rose-500/15 flex items-center justify-between text-xs">
                 <div class="text-slate-400">
-                  7 Days Ago: <span class="text-white font-extrabold font-mono">{{ alert.previousScore | number:'1.1-1' }}</span>
+                  Previous: <span class="text-white font-extrabold font-mono">{{ alert.previousScore | number:'1.1-1' }}</span>
                 </div>
                 <div class="text-slate-400">
                   Current: <span class="text-rose-400 font-extrabold font-mono">{{ alert.currentScore | number:'1.1-1' }}</span>
@@ -137,7 +142,7 @@ import { FormsModule } from '@angular/forms';
         <!-- TAB CONTENT 2: Achievements / Ups -->
         <div *ngIf="deanInsightTab() === 'ups'" class="space-y-4 animate-fade-in">
           <div *ngIf="leaderboard().length === 0" class="p-6 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center text-slate-500 text-xs">
-            Waiting for student feedback submissions to populate milestones.
+            Waiting for feedback submissions to show top performers.
           </div>
 
           <div *ngIf="leaderboard().length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -148,7 +153,7 @@ import { FormsModule } from '@angular/forms';
 
                 <div class="relative z-10 flex items-start justify-between gap-4">
                   <div class="space-y-1">
-                    <span class="text-[9px] font-extrabold tracking-widest uppercase bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">EXCEPTIONAL SCORE</span>
+                    <span class="text-[9px] font-extrabold tracking-widest uppercase bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">Top Rating</span>
                     <h3 class="text-sm font-extrabold text-white mt-2 leading-snug">{{ item.name }}</h3>
                     <p class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">{{ item.email }}</p>
                   </div>
@@ -156,19 +161,19 @@ import { FormsModule } from '@angular/forms';
                   <!-- Rank Badge -->
                   <div class="text-right">
                     <div class="text-2xl font-black text-emerald-400 font-mono tracking-tighter">#{{ idx + 1 }}</div>
-                    <div class="text-[8px] font-extrabold text-emerald-500 uppercase tracking-wider">Faculty Rank</div>
+                    <div class="text-[8px] font-extrabold text-emerald-500 uppercase tracking-wider">Rank</div>
                   </div>
                 </div>
 
                 <!-- Calculation details -->
                 <div class="mt-4 p-2 bg-emerald-950/20 border border-emerald-950/40 rounded-lg text-[9px] font-mono text-emerald-300/80">
-                  Reliability index: responses ({{ item.totalSubmissions }}) &times; Score ({{ item.averageScore }}) = {{ (item.totalSubmissions * item.averageScore) | number:'1.1-1' }}
+                  Responses: {{ item.totalSubmissions }} × Score: {{ item.averageScore }} = {{ (item.totalSubmissions * item.averageScore) | number:'1.1-1' }}
                 </div>
 
-                <!-- Comparative details -->
+                <!-- Score details -->
                 <div class="relative z-10 mt-3 pt-3 border-t border-emerald-500/15 flex items-center justify-between text-xs">
                   <div class="text-slate-400">
-                    Confidence Level: <span class="text-white font-extrabold font-mono">98.4%</span>
+                    Total Reviews: <span class="text-white font-extrabold font-mono">{{ item.totalSubmissions }}</span>
                   </div>
                   <div class="text-slate-400">
                     Score: <span class="text-emerald-400 font-extrabold font-mono">{{ item.averageScore | number:'1.2-2' }}/10</span>
@@ -192,7 +197,7 @@ import { FormsModule } from '@angular/forms';
               <p class="text-xs text-slate-400 leading-relaxed mb-4">
                 Measures the amount of variation or dispersion of course sentiment averages across the institute.
               </p>
-              
+
               <!-- Equation Block -->
               <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800 text-center font-mono text-white text-xs mb-4">
                 &sigma; = &radic; [ &Sigma;(x<sub>i</sub> - &mu;)<sup>2</sup> / N ]
@@ -232,7 +237,7 @@ import { FormsModule } from '@angular/forms';
               <p class="text-xs text-slate-400 leading-relaxed mb-4">
                 Computes the range in which the true mean parameter of feedback lies with a 95% probability weight.
               </p>
-              
+
               <!-- Equation Block -->
               <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800 text-center font-mono text-white text-xs mb-4">
                 C.I. = &mu; &plusmn; 1.96 &times; ( &sigma; / &radic;N )
@@ -266,13 +271,13 @@ import { FormsModule } from '@angular/forms';
             <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-brand-500/5 blur-2xl"></div>
             <div>
               <div class="flex items-center justify-between mb-3">
-                <span class="text-[9px] font-extrabold tracking-widest uppercase bg-brand-500/15 border border-brand-500/20 text-brand-300 px-2.5 py-0.5 rounded-full">INTEGRITY WEIGHT INDEX</span>
+                <span class="text-[9px] font-extrabold tracking-widest uppercase bg-brand-500/15 border border-brand-500/20 text-brand-300 px-2.5 py-0.5 rounded-full">STATISTICAL CONSISTENCY INDEX</span>
                 <span class="text-sm">🔬</span>
               </div>
               <p class="text-xs text-slate-400 leading-relaxed mb-4">
-                Computes standard error scaling over response densities to track database integrity.
+                Computes standard error scaling over response densities to evaluate overall survey consistency.
               </p>
-              
+
               <!-- Equation Block -->
               <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800 text-center font-mono text-white text-xs mb-4">
                 W<sub>i</sub> = &Sigma;(S<sub>i</sub> &times; R<sub>i</sub>) / Total R
@@ -553,29 +558,43 @@ import { FormsModule } from '@angular/forms';
             </div>
           </div>
 
-          <!-- SECTION 4: Bulk CSV Data Ingestion -->
+          <!-- SECTION 4: Institutional Bulk Ingestion Hub -->
           <div class="glass-card p-6 sm:p-8 space-y-6">
             <div class="pb-3 border-b border-surface-border flex items-center justify-between">
               <div>
-                <h2 class="text-white font-extrabold text-base">Bulk CSV Data Ingestion</h2>
-                <p class="text-slate-400 text-xs mt-0.5">Import institutional mappings and users via CSV.</p>
+                <h2 class="text-white font-extrabold text-base">Bulk Data Ingestion Portal</h2>
+                <p class="text-slate-400 text-xs mt-0.5">Import student rosters, faculty, and mappings.</p>
               </div>
-              <span class="text-xs font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded font-bold">CSV BULK</span>
+              <span class="text-xs font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded font-bold">BULK IMPORT</span>
+            </div>
+
+            <!-- Ingestion Mode Switcher -->
+            <div class="flex p-1 bg-slate-950/60 border border-surface-border rounded-xl max-w-xs">
+              <button type="button" (click)="ingestMode.set('csv'); uploadResult.set(null);"
+                      class="flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200"
+                      [ngClass]="ingestMode() === 'csv' ? 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 font-black' : 'text-slate-400 hover:text-white'">
+                📂 Standard CSV
+              </button>
+              <button type="button" (click)="ingestMode.set('ai'); uploadResult.set(null);"
+                      class="flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200"
+                      [ngClass]="ingestMode() === 'ai' ? 'bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 font-black' : 'text-slate-400 hover:text-white'">
+                ✨ AI Text Ingest
+              </button>
             </div>
 
             <!-- Upload Tabs — Premium Glassmorphic Bar -->
             <div class="tab-bar mb-5">
-              <button (click)="activeTab.set('students'); selectedFile.set(null); uploadResult.set(null);"
+              <button (click)="activeTab.set('students'); selectedFile.set(null); uploadResult.set(null); aiPreviewData.set([]);"
                       class="tab-btn tab-brand"
                       [class.tab-active]="activeTab() === 'students'">
                 🎓 Students
               </button>
-              <button (click)="activeTab.set('faculty'); selectedFile.set(null); uploadResult.set(null);"
+              <button (click)="activeTab.set('faculty'); selectedFile.set(null); uploadResult.set(null); aiPreviewData.set([]);"
                       class="tab-btn tab-emerald"
                       [class.tab-active]="activeTab() === 'faculty'">
                 👨‍🏫 Faculty
               </button>
-              <button (click)="activeTab.set('assignments'); selectedFile.set(null); uploadResult.set(null);"
+              <button (click)="activeTab.set('assignments'); selectedFile.set(null); uploadResult.set(null); aiPreviewData.set([]);"
                       class="tab-btn tab-violet"
                       [class.tab-active]="activeTab() === 'assignments'">
                 🔗 Assignments
@@ -586,16 +605,8 @@ import { FormsModule } from '@angular/forms';
             <div class="bg-slate-950/40 border border-surface-border p-4 rounded-xl space-y-2 mb-4">
               <div class="flex items-center justify-between mb-3">
                 <span class="text-[10px] font-mono text-slate-500 block uppercase font-bold">Required Format &amp; Headers</span>
-                <div class="tab-bar" style="padding:3px; border-radius:12px; gap:2px;">
-                  <button type="button" (click)="ingestMode.set('csv')"
-                          class="tab-btn tab-brand" style="padding:5px 12px; border-radius:9px; font-size:9px;"
-                          [class.tab-active]="ingestMode() === 'csv'">📄 CSV</button>
-                  <button type="button" (click)="ingestMode.set('ai')"
-                          class="tab-btn tab-emerald" style="padding:5px 12px; border-radius:9px; font-size:9px;"
-                          [class.tab-active]="ingestMode() === 'ai'">✨ AI Text</button>
-                </div>
               </div>
-              
+
               <div *ngIf="activeTab() === 'students'" class="space-y-1">
                 <div class="flex items-center justify-between">
                   <p class="text-[11px] text-slate-300 font-medium">Headers: <span class="font-mono text-brand-300 font-bold">[Name, Email, RollNo, Section, Semester]</span></p>
@@ -649,13 +660,13 @@ import { FormsModule } from '@angular/forms';
 
               <!-- Upload and Reset buttons -->
               <div class="flex gap-3 mb-4">
-                <button type="button" (click)="selectedFile() ? onUpload() : csvFileRef.click()" class="btn-primary py-2.5 px-5 text-xs font-bold uppercase tracking-wider flex-1" 
+                <button type="button" (click)="selectedFile() ? onUpload() : csvFileRef.click()" class="btn-primary py-2.5 px-5 text-xs font-bold uppercase tracking-wider flex-1"
                         [disabled]="uploading()">
                   <span *ngIf="uploading()">UPLOADING...</span>
                   <span *ngIf="!uploading() && !selectedFile()">📂 SELECT FILE</span>
                   <span *ngIf="!uploading() && selectedFile()">UPLOAD DATA</span>
                 </button>
-                <button type="button" *ngIf="selectedFile()" (click)="selectedFile.set(null); uploadResult.set(null);" 
+                <button type="button" *ngIf="selectedFile()" (click)="selectedFile.set(null); uploadResult.set(null);"
                         class="btn-ghost py-2.5 px-3 text-xs font-bold uppercase tracking-wider">
                   RESET
                 </button>
@@ -663,53 +674,72 @@ import { FormsModule } from '@angular/forms';
             </ng-container>
 
             <ng-container *ngIf="ingestMode() === 'ai'">
-              <div class="mb-4">
-                <textarea [(ngModel)]="aiRawText" placeholder="Paste unstructured raw data here (e.g. from an email, PDF, or message) and let Gemini figure out the JSON structure..." 
-                          class="w-full h-32 p-4 rounded-xl bg-slate-950/50 border border-slate-700 text-xs font-mono text-slate-300 focus:outline-none focus:border-brand-500 transition-colors resize-none"></textarea>
-              </div>
-
-              <div class="flex gap-3 mb-4">
-                <button (click)="$event.stopPropagation(); onProcessAIIngest();" class="btn-primary py-2.5 px-5 text-xs font-bold uppercase tracking-wider flex-1 flex items-center justify-center gap-2" 
-                        [disabled]="!aiRawText || processingAI()">
-                  <svg *ngIf="processingAI()" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                  <span *ngIf="processingAI()">Gemini is structuring...</span>
-                  <span *ngIf="!processingAI()">✨ Extract Structure</span>
-                </button>
-                <button *ngIf="aiRawText" (click)="$event.stopPropagation(); aiRawText=''; aiPreviewData.set([]); uploadResult.set(null);" 
-                        class="btn-ghost py-2.5 px-3 text-xs font-bold uppercase tracking-wider">
-                  CLEAR
-                </button>
-              </div>
-
-              <!-- AI Preview Table -->
-              <div *ngIf="aiPreviewData() && aiPreviewData().length > 0" class="bg-slate-950/60 rounded-xl border border-brand-500/30 mb-4 overflow-hidden animate-fade-in">
-                <div class="px-4 py-3 border-b border-brand-500/20 bg-brand-500/10 flex items-center justify-between">
-                  <span class="text-[10px] font-black uppercase tracking-wider text-brand-300">AI Preview & Edit ({{ aiPreviewData().length }} records)</span>
+              <!-- AI Ingest Container -->
+              <div class="space-y-4 animate-fade-in">
+                <div>
+                  <label class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2">Paste Unstructured Academic Text</label>
+                  <p class="text-[10px] text-slate-500 leading-relaxed mb-2">
+                    Paste raw text tables, lists, or unstructured notes below. Our integrated Gemini uploader structures the raw copy directly into records.
+                  </p>
+                  <textarea [(ngModel)]="aiRawText" placeholder="Example student data:&#10;Amit Kumar, amit.kumar&#64;iiitr.ac.in, Roll 2022BCS021, Sec A, Sem 3&#10;Sneha Verma, sneha.verma&#64;iiitr.ac.in, Roll 2022BCS022, Sec B, Sem 3"
+                            class="input-field h-36 text-xs font-mono p-4 resize-none leading-relaxed custom-scroll"
+                            [disabled]="processingAI()"></textarea>
                 </div>
-                <div class="max-h-60 overflow-y-auto">
-                  <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-900/50 text-slate-400 font-mono text-[9px] uppercase tracking-wider sticky top-0">
-                      <tr>
-                        <th *ngFor="let key of getObjectKeys(aiPreviewData()[0])" class="px-3 py-2 border-b border-slate-800">{{ key }}</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800">
-                      <tr *ngFor="let item of aiPreviewData(); let i = index" class="hover:bg-slate-800/30 transition-colors">
-                        <td *ngFor="let key of getObjectKeys(item)" class="px-3 py-2 font-mono text-[10px]">
-                          <input [(ngModel)]="item[key]" class="w-full bg-transparent border-none outline-none focus:bg-slate-800 focus:ring-1 focus:ring-brand-500 rounded px-1 py-0.5 text-slate-300">
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="p-3 bg-slate-900/50 border-t border-slate-800 flex justify-end">
-                  <button (click)="$event.stopPropagation(); onFinalizeAI();" class="btn-primary py-2 px-6 text-[10px] font-black uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 !shadow-emerald-500/30">
-                    <span *ngIf="uploading()">Finalizing...</span>
-                    <span *ngIf="!uploading()">Finalize to DB</span>
+
+                <!-- Process Button -->
+                <button type="button" (click)="onProcessAIIngest()" 
+                        class="btn-primary w-full py-2.5 text-xs font-bold uppercase tracking-wider"
+                        [disabled]="processingAI() || !aiRawText.trim()">
+                  <span *ngIf="processingAI()" class="flex items-center justify-center gap-2">
+                    <span class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Extracting Records via Gemini...
+                  </span>
+                  <span *ngIf="!processingAI()">✨ Extract &amp; Structure Records</span>
+                </button>
+
+                <!-- AI Extracted Preview Data Table -->
+                <div *ngIf="aiPreviewData().length > 0" class="space-y-3.5 pt-4 border-t border-surface-border/50 animate-scale-in">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase">
+                      Extracted Records Preview ({{ aiPreviewData().length }})
+                    </span>
+                    <button type="button" (click)="aiPreviewData.set([])" class="text-[9px] font-bold text-rose-400 hover:text-rose-300 uppercase underline bg-transparent border-none p-0 cursor-pointer">
+                      Clear Preview
+                    </button>
+                  </div>
+
+                  <!-- High fidelity glass scrollable preview table -->
+                  <div class="overflow-x-auto rounded-xl border border-surface-border bg-slate-950/20 max-h-[220px] custom-scroll">
+                    <table class="w-full text-left border-collapse text-[11px]">
+                      <thead>
+                        <tr class="bg-slate-950/60 border-b border-surface-border">
+                          <th *ngFor="let col of getObjectKeys(aiPreviewData()[0])" class="p-3 font-bold text-slate-400 uppercase tracking-wider font-mono">
+                            {{ col }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let row of aiPreviewData()" class="border-b border-surface-border/35 hover:bg-white/5 transition-colors">
+                          <td *ngFor="let col of getObjectKeys(row)" class="p-3 text-slate-300 font-semibold truncate max-w-[150px]">
+                            {{ row[col] }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Finalize AI Bulk Upload Button -->
+                  <button type="button" (click)="onFinalizeAI()" 
+                          class="btn-primary w-full py-2.5 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-glow"
+                          [disabled]="uploading()">
+                    <span *ngIf="uploading()">SAVING TO DATABASE...</span>
+                    <span *ngIf="!uploading()">🚀 Verify &amp; Save Records to Database</span>
                   </button>
                 </div>
               </div>
             </ng-container>
+
+
 
             <!-- Response Alert -->
             <div *ngIf="uploadResult()" class="p-4 rounded-xl border animate-fade-in"
@@ -755,7 +785,8 @@ import { FormsModule } from '@angular/forms';
 export class AdminDashboardComponent implements OnInit, AfterViewInit {
   auth         = inject(AuthService);
   adminService = inject(AdminService);
-  
+  router       = inject(Router);
+
   @ViewChild('meshCanvas') meshCanvas!: ElementRef<HTMLCanvasElement>;
 
   stats        = signal<AdminStats | null>(null);
@@ -789,7 +820,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
     const scores = list.map(item => item.averageScore);
     const mean = scores.reduce((sum, val) => sum + val, 0) / scores.length;
-    
+
     const variance = scores.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / scores.length;
     const stdDev = Math.sqrt(variance);
     const highestRating = Math.max(...scores);
@@ -798,8 +829,8 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     const totalFeedbackWeight = list.reduce((sum, item) => sum + (item.averageScore * (item.totalSubmissions || 0)), 0);
 
     const alertList = this.alerts();
-    const averageDrop = alertList.length > 0 
-      ? alertList.reduce((sum, a) => sum + a.dropPercentage, 0) / alertList.length 
+    const averageDrop = alertList.length > 0
+      ? alertList.reduce((sum, a) => sum + a.dropPercentage, 0) / alertList.length
       : 0;
 
     const sqrtN = Math.sqrt(list.length || 1);
@@ -950,7 +981,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
   downloadTemplate(type: 'students' | 'faculty' | 'assignments') {
     let csvContent = '';
     let filename = '';
-    
+
     if (type === 'students') {
       csvContent = [
         'Name,Email,RollNo,Section,Semester',
@@ -980,7 +1011,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       ].join('\r\n');
       filename = 'assignments_template.csv';
     }
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -1036,12 +1067,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       };
 
       const isCyber = document.documentElement.classList.contains('theme-cyber');
-      
+
       // Indigo blob
-      drawBlob(0, 0, Math.max(canvas.width, canvas.height) * 0.7, 
+      drawBlob(0, 0, Math.max(canvas.width, canvas.height) * 0.7,
                isCyber ? 'rgba(99, 102, 241, 0.4)' : 'rgba(37, 99, 235, 0.3)', 1.2);
       // Emerald / Purple blob
-      drawBlob(2, 1, Math.max(canvas.width, canvas.height) * 0.6, 
+      drawBlob(2, 1, Math.max(canvas.width, canvas.height) * 0.6,
                isCyber ? 'rgba(16, 185, 129, 0.3)' : 'rgba(168, 85, 247, 0.3)', 0.8);
 
       requestAnimationFrame(draw);
@@ -1249,7 +1280,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
         this.uploading.set(false);
         this.aiRawText = '';
         this.aiPreviewData.set([]);
-        
+
         this.uploadResult.set({
           success: true,
           message: res.message || 'AI JSON Bulk Upload successful!',

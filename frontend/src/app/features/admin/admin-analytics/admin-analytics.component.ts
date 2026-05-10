@@ -171,7 +171,7 @@ import { AdminService, AdminStats, FacultyLeaderboardItem } from '../../../core/
                     <span class="text-xs font-extrabold text-white font-mono">{{ item.totalSubmissions }}</span>
                   </div>
                   <div class="text-right">
-                    <span class="text-[9px] text-slate-500 font-bold block uppercase tracking-wider font-semibold">Average Index</span>
+                    <span class="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">Average Index</span>
                     <span class="text-sm font-black text-emerald-400 font-mono">{{ item.averageScore | number:'1.2-2' }}</span>
                   </div>
                 </div>

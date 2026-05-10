@@ -19,6 +19,6 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'analytics',
     loadComponent: () =>
-      import('./admin-analytics/admin-analytics.component').then(m => m.AdminAnalyticsComponent)
+      import('./admin-feedback-analytics/admin-feedback-analytics.component').then(m => m.AdminFeedbackAnalyticsComponent)
   }
 ];

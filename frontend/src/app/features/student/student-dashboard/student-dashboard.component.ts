@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StudentService, CourseAssignment, FeedbackPayload } from '../../../core/services/student.service';
 import { AdminService, QuestionItem } from '../../../core/services/admin.service';
@@ -11,6 +11,7 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
   selector: 'app-student-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
@@ -20,11 +21,11 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
         <div class="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-cyan-500/10 blur-[80px]"></div>
 
         <div class="relative z-10">
-          <span class="text-xs font-bold uppercase tracking-widest text-brand-400 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20 animate-pulse">STUDENT PORTAL</span>
-          <h1 class="text-2xl sm:text-3xl font-black text-white mt-3 tracking-tight">Academic Evaluations</h1>
+          <span class="text-xs font-bold uppercase tracking-widest text-brand-400 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20 animate-pulse">Student Portal</span>
+          <h1 class="text-2xl sm:text-3xl font-black text-white mt-3 tracking-tight">Course Feedback</h1>
           <p class="text-slate-400 text-sm mt-2 leading-relaxed max-w-xl font-medium">
             Welcome, <span class="text-white font-extrabold">{{ auth.currentUser()?.name }}</span> (Section {{ auth.currentUser()?.section }}).
-            Your evaluations are <span class="text-brand-300 font-semibold">100% anonymized</span> and help maintain excellence at IIIT Ranchi.
+            Share your feedback on assigned courses. All responses are confidential.
           </p>
         </div>
 
@@ -129,7 +130,7 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
 
         <!-- Modal Frame -->
         <div class="glass-card w-full max-w-2xl max-h-[90vh] flex flex-col justify-between overflow-hidden border border-brand-500/30 rounded-3xl shadow-glow shadow-brand-500/20 animate-scale-in">
-          
+
           <!-- STAGE 1: Standard Evaluation Form (Show if NOT successful) -->
           <ng-container *ngIf="!showSuccessExperience()">
             <!-- Header (Instructor brand panel) -->
@@ -149,12 +150,12 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
 
             <!-- Scrollable Questionnaire Core -->
             <div class="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 max-h-[60vh] custom-scroll">
-              
-              <!-- Double Anonymity Warning Callout -->
+
+              <!-- Anonymous Warning Callout -->
               <div class="p-3.5 rounded-xl bg-cyan-500/5 border border-cyan-500/20 text-cyan-300 text-xs flex gap-2.5 items-start leading-relaxed">
                 <span class="text-sm">🛡️</span>
                 <div>
-                  <strong>Double-Anonymity Guard:</strong> Neither your identity nor your submission timestamp is linked to this feedback. Ratings and remarks are processed separately.
+                  <strong>Anonymous Evaluation:</strong> Your responses are completely anonymous. No student identity is linked to this feedback.
                 </div>
               </div>
 
@@ -208,39 +209,29 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
                   </div>
                 </div>
 
-                <!-- Qualitative Comments (Mandatory Validator bounds: 10-500) -->
+                <!-- Written Comments (Optional) -->
                 <div class="space-y-2 pt-4 border-t border-surface-border/40">
                   <div class="flex justify-between items-center">
-                    <label class="block text-xs font-black uppercase tracking-wider text-slate-400">Qualitative Remarks</label>
-                    
-                    <!-- Character reactive bounds counter -->
-                    <span class="text-[10px] font-mono font-black tracking-wider"
-                          [ngClass]="{
-                            'text-slate-400 bg-slate-950/60 border border-slate-900 px-2 py-0.5 rounded-full': feedbackForm.get('remark')?.valid || !feedbackForm.get('remark')?.touched,
-                            'text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full': feedbackForm.get('remark')?.invalid && feedbackForm.get('remark')?.touched
-                          }">
+                    <label class="block text-xs font-black uppercase tracking-wider text-slate-400">Comments (Optional)</label>
+
+                    <!-- Character counter -->
+                    <span class="text-[10px] font-mono font-black tracking-wider text-slate-400 bg-slate-950/60 border border-slate-900 px-2 py-0.5 rounded-full">
                       {{ feedbackForm.get('remark')?.value?.length || 0 }} / 500
                     </span>
                   </div>
 
                   <textarea formControlName="remark"
                             rows="4"
-                            placeholder="Provide constructive, professional comments on lecture structure, syllabus pacing, homework scope, interaction dynamics, or general recommendations..."
+                            placeholder="Write any additional feedback or suggestions here..."
                             class="input-field py-3.5 px-4.5 leading-relaxed text-xs sm:text-sm resize-none"
                             [ngClass]="{
                               'border-rose-500/30 focus:border-rose-500': feedbackForm.get('remark')?.invalid && feedbackForm.get('remark')?.touched
                             }"></textarea>
-                  
+
                   <!-- Explicit validation helper messages -->
                   <div class="flex flex-col gap-1">
-                    <p *ngIf="feedbackForm.get('remark')?.touched && feedbackForm.get('remark')?.errors?.['required']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
-                      <span>⚠️</span> Qualitative remarks are required.
-                    </p>
-                    <p *ngIf="feedbackForm.get('remark')?.touched && feedbackForm.get('remark')?.errors?.['minlength']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
-                      <span>⚠️</span> Qualitative remarks must be at least 10 characters long.
-                    </p>
                     <p *ngIf="feedbackForm.get('remark')?.touched && feedbackForm.get('remark')?.errors?.['maxlength']" class="text-rose-400 text-[10px] font-semibold flex items-center gap-1 mt-1 animate-fade-in">
-                      <span>⚠️</span> Qualitative remarks cannot exceed 500 characters.
+                      <span>⚠️</span> Comments cannot exceed 500 characters.
                     </p>
                   </div>
                 </div>
@@ -250,13 +241,13 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
             <!-- Footer Actions -->
             <div class="p-6 border-t border-surface-border/60 bg-slate-950/40 flex flex-col sm:flex-row gap-3 items-center justify-between">
               <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">All ratings are processed anonymously.</span>
-              
+
               <div class="flex gap-3 w-full sm:w-auto">
                 <button (click)="closeEvaluation()"
                         class="btn-ghost w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider">
                   Cancel
                 </button>
-                
+
                 <!-- Submit button: glassmorphic disabled state applied elegantly inside dynamic templates -->
                 <button (click)="submitEvaluation()"
                         [disabled]="!feedbackForm || feedbackForm.invalid || submitting()"
@@ -275,9 +266,9 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
           </ng-container>
 
           <!-- STAGE 2: Glassmorphic Success Tab (Show on SUCCESS) -->
-          <div *ngIf="showSuccessExperience()" 
+          <div *ngIf="showSuccessExperience()"
                class="p-8 sm:p-12 flex flex-col items-center text-center space-y-6 animate-scale-in">
-            
+
             <!-- Large animated Green Tick SVG -->
             <div class="relative w-24 h-24 flex items-center justify-center">
               <div class="absolute inset-0 rounded-full bg-emerald-500/10 border border-emerald-500/20 animate-ping" style="animation-duration: 2.2s;"></div>
@@ -300,17 +291,17 @@ import { SpinnerService } from '../../../shared/components/spinner/spinner.compo
 
             <!-- Obscured identity subtext -->
             <p class="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-md">
-              Your identity has been obscured via <span class="text-brand-300 font-bold bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded-lg whitespace-nowrap">ZK-Protocol</span> and your remarks are <span class="text-cyan-300 font-bold bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-lg whitespace-nowrap">End-to-End Encrypted</span>. Data has been successfully stored in our evaluation system.
+              Your feedback has been saved securely and anonymously. No identifying information is linked to your submission.
             </p>
 
-            <!-- Simulated secure proof checksum panel -->
+            <!-- Submission proof confirmation -->
             <div class="w-full max-w-md p-3 rounded-xl bg-slate-950/80 border border-slate-900/60 font-mono text-[9px] text-slate-500 break-all select-none flex items-center justify-center gap-2">
-              <span class="text-emerald-500 font-bold">✓ ENCRYPTED PROOF:</span>
-              <span>sha256-aes256gcm-{{ assign.course.courseCode.toLowerCase() }}-{{ assign.assignmentId.slice(0,8) }}...</span>
+              <span class="text-emerald-500 font-bold">✓ SUBMISSION REF:</span>
+              <span>iiitr-{{ assign.course.courseCode.toLowerCase() }}-{{ assign.assignmentId.slice(0,8) }}</span>
             </div>
 
             <!-- Return button -->
-            <button (click)="closeSuccessExperience()" 
+            <button (click)="closeSuccessExperience()"
                     class="btn-primary w-full max-w-xs py-3.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-brand hover:scale-[1.01] active:scale-98 transition-all duration-300">
               Return to Dashboard
             </button>
@@ -433,7 +424,7 @@ export class StudentDashboardComponent implements OnInit {
 
     // Dynamic Reactive FormGroup creation
     const formControls: Record<string, any> = {
-      remark: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(500)]]
+      remark: ['', [Validators.maxLength(500)]]
     };
 
     // Dynamically insert FormControl mapping each active Questionnaire Question
@@ -538,11 +529,11 @@ export class StudentDashboardComponent implements OnInit {
     try {
       const secretString = 'IIIT_RANCHI_SECURE_E2EE_SECRET_2026'; // Match backend shared key
       const enc = new TextEncoder();
-      
+
       // Hash key using SHA-256
       const keyData = enc.encode(secretString);
       const hash = await window.crypto.subtle.digest('SHA-256', keyData);
-      
+
       // Import symmetric AES key
       const cryptoKey = await window.crypto.subtle.importKey(
         'raw',
@@ -551,30 +542,30 @@ export class StudentDashboardComponent implements OnInit {
         false,
         ['encrypt']
       );
-      
+
       // Generate secure 12-byte initialization vector
       const iv = window.crypto.getRandomValues(new Uint8Array(12));
       const remarkData = enc.encode(remark);
-      
+
       // Perform AES-GCM Encryption
       const encryptedBuffer = await window.crypto.subtle.encrypt(
         { name: 'AES-GCM', iv },
         cryptoKey,
         remarkData
       );
-      
+
       // Process Web Crypto output containing ciphertext + 16-byte auth tag
       const combined = new Uint8Array(encryptedBuffer);
       const ciphertext = combined.slice(0, combined.byteLength - 16);
       const authTag = combined.slice(combined.byteLength - 16);
-      
+
       // Convert to standard hex strings
       const toHex = (arr: Uint8Array) => Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
-      
+
       const ivHex = toHex(iv);
       const ciphertextHex = toHex(ciphertext);
       const authTagHex = toHex(authTag);
-      
+
       return `${ivHex}:${ciphertextHex}:${authTagHex}`;
     } catch (err) {
       console.error('Client-side AES E2EE failed:', err);
@@ -597,24 +588,24 @@ export class StudentDashboardComponent implements OnInit {
     for (let i = 0; i < 80; i++) {
       const particle = document.createElement('div');
       const color = colors[Math.floor(Math.random() * colors.length)];
-      
+
       particle.style.position = 'absolute';
       particle.style.width = `${Math.floor(Math.random() * 8) + 7}px`;
       particle.style.height = `${Math.floor(Math.random() * 8) + 7}px`;
       particle.style.backgroundColor = color;
       particle.style.borderRadius = Math.random() > 0.55 ? '50%' : '15%';
-      
+
       // Burst starting position: bottom-center random spread
-      particle.style.left = `${Math.floor(Math.random() * 40) + 30}vw`; 
+      particle.style.left = `${Math.floor(Math.random() * 40) + 30}vw`;
       particle.style.bottom = '-15px';
       particle.style.opacity = '1';
       particle.style.transform = `rotate(${Math.random() * 360}deg)`;
-      
+
       // Transition setup with custom ease values for drift
       particle.style.transition = `
-        transform ${Math.random() * 2 + 1.8}s cubic-bezier(0.25, 1, 0.5, 1), 
-        left ${Math.random() * 2 + 1.8}s ease-out, 
-        bottom ${Math.random() * 2 + 1.8}s cubic-bezier(0.25, 1, 0.5, 1), 
+        transform ${Math.random() * 2 + 1.8}s cubic-bezier(0.25, 1, 0.5, 1),
+        left ${Math.random() * 2 + 1.8}s ease-out,
+        bottom ${Math.random() * 2 + 1.8}s cubic-bezier(0.25, 1, 0.5, 1),
         opacity ${Math.random() * 1.5 + 1.8}s ease-out
       `;
 

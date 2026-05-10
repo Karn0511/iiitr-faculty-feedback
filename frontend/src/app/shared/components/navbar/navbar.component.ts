@@ -13,6 +13,83 @@ interface NavItem {
   selector: 'app-navbar',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
+  styles: [`
+    :host-context(.theme-academic) {
+      nav {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(24px) !important;
+        border-color: rgba(15, 23, 42, 0.06) !important;
+        box-shadow: 0 4px 30px rgba(15, 23, 42, 0.04), 0 1px 4px rgba(15, 23, 42, 0.01) !important;
+      }
+      .text-white {
+        color: #0f172a !important;
+      }
+      .text-slate-400 {
+        color: #475569 !important;
+      }
+      .hover\:text-white:hover {
+        color: #0f172a !important;
+      }
+      
+      /* Navigation links as luxurious interactive glass tabs */
+      a.rounded-xl {
+        background: rgba(15, 23, 42, 0.02) !important;
+        border: 1px solid rgba(15, 23, 42, 0.03) !important;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.01) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        margin: 0 4px !important;
+        
+        &:hover {
+          color: #0f172a !important;
+          background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.65) 100%) !important;
+          border-color: rgba(15, 23, 42, 0.06) !important;
+          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.02) !important;
+          transform: translateY(-1.5px) !important;
+        }
+      }
+      
+      /* Active tab highlight */
+      a[class*="bg-brand-500/15"] {
+        color: #4f46e5 !important;
+        background: linear-gradient(135deg, #ffffff 0%, rgba(243, 244, 246, 0.9) 100%) !important;
+        border-color: rgba(99, 102, 241, 0.15) !important;
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.08), 0 2px 6px rgba(99, 102, 241, 0.04) !important;
+        font-weight: 600 !important;
+      }
+      
+      span[class*="bg-brand-900"] {
+        background-color: rgba(99, 102, 241, 0.08) !important;
+        color: #4f46e5 !important;
+        border-color: rgba(99, 102, 241, 0.2) !important;
+      }
+      span[class*="bg-emerald-900"] {
+        background-color: rgba(16, 185, 129, 0.08) !important;
+        color: #059669 !important;
+        border-color: rgba(16, 185, 129, 0.2) !important;
+      }
+      span[class*="bg-amber-900"] {
+        background-color: rgba(245, 158, 11, 0.08) !important;
+        color: #d97706 !important;
+        border-color: rgba(245, 158, 11, 0.2) !important;
+      }
+      
+      .glass-card {
+        background: rgba(255, 255, 255, 0.92) !important;
+        border-color: rgba(15, 23, 42, 0.08) !important;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08), 0 4px 10px rgba(15, 23, 42, 0.02) !important;
+        
+        .text-white {
+          color: #0f172a !important;
+        }
+        .text-slate-400 {
+          color: #475569 !important;
+        }
+        .border-b {
+          border-color: rgba(15, 23, 42, 0.06) !important;
+        }
+      }
+    }
+  `],
   template: `
     <nav class="fixed top-0 left-0 right-0 z-50 border-b border-surface-border"
          style="background: rgba(15,23,42,0.85); backdrop-filter: blur(20px);">
@@ -144,7 +221,6 @@ export class NavbarComponent {
     ];
     if (role === 'Faculty') return [
       { label: 'Dashboard', route: '/faculty',           icon: '&#128202;' },
-      { label: 'AI Insights',route: '/faculty/insights', icon: '&#129302;' },
     ];
     if (role === 'Student') return [
       { label: 'My Courses', route: '/student',          icon: '&#128218;' },
