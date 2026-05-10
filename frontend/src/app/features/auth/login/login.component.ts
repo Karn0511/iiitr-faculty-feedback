@@ -49,8 +49,8 @@ interface CarouselSlide {
             <div class="relative w-40 h-40 lg:w-48 lg:h-48 xl:w-56 xl:h-56 shrink-0 flex items-center justify-center">
               
               <!-- Large Outer Boundary Ring (Mathematically concentric via standard negative inset) -->
-              <div class="absolute -inset-6 lg:-inset-7 xl:-inset-9 rounded-full flex items-center justify-center pointer-events-none z-0">
-                <div class="absolute inset-0 rounded-full border-[1px] border-dashed border-slate-500/30 spin-reverse" style="animation-duration: 40s;"></div>
+              <div class="absolute -inset-6 lg:-inset-7 xl:-inset-9 flex items-center justify-center pointer-events-none z-0">
+                <div class="w-full h-full rounded-full border-[1px] border-dashed border-slate-500/30 spin-reverse" style="animation-duration: 40s;"></div>
                 <div class="absolute -inset-2.5 rounded-full border-[1px] border-dotted border-slate-600/40 spin-fast" style="animation-duration: 60s;"></div>
               </div>
               
@@ -69,10 +69,12 @@ interface CarouselSlide {
                 </div>
               </div>
               
-              <!-- Refined Floating Center Logo -->
-              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-24 h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_35px_rgba(59,130,246,0.25)] p-3 backdrop-blur-md">
-                <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-1">
-                  <img src="/logo.png" class="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 object-contain transition-transform duration-500" alt="IIIT Ranchi Emblem" />
+              <!-- Invincible Floating Center Logo (Flexbox Centered) -->
+              <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-auto">
+                <div class="relative w-24 h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_35px_rgba(59,130,246,0.25)] p-3 backdrop-blur-md transition-all duration-300 hover:scale-105 hover:shadow-[0_0_45px_rgba(59,130,246,0.4)] cursor-pointer">
+                  <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-1">
+                    <img src="/logo.png" class="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 object-contain" alt="IIIT Ranchi Emblem" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -126,10 +128,12 @@ interface CarouselSlide {
                 </div>
               </div>
               
-              <!-- Compact Floating Center Logo -->
-              <div class="relative z-20 w-20 h-20 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-lg p-2.5 backdrop-blur-sm">
-                <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-0.5">
-                  <img src="/logo.png" class="w-14 h-14 object-contain" alt="IIIT Ranchi Logo" />
+              <!-- Invincible Compact Center Logo (Flexbox Centered) -->
+              <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-auto">
+                <div class="relative w-20 h-20 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-lg p-2.5 backdrop-blur-sm transition-all duration-300 hover:scale-105">
+                  <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-0.5">
+                    <img src="/logo.png" class="w-14 h-14 object-contain" alt="IIIT Ranchi Logo" />
+                  </div>
                 </div>
               </div>
             </div>
