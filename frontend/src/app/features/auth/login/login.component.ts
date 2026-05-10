@@ -48,10 +48,10 @@ interface CarouselSlide {
           <div class="relative z-10 flex flex-col items-center justify-center text-center py-2">
             <div class="relative w-40 h-40 lg:w-48 lg:h-48 xl:w-56 xl:h-56 shrink-0 flex items-center justify-center">
               
-              <!-- Large Outer Boundary Ring (Mathematically concentric via explicit width/translation) -->
-              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] h-[240px] lg:w-[280px] lg:h-[280px] xl:w-[320px] xl:h-[320px] rounded-full flex items-center justify-center pointer-events-none z-0">
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border-[1px] border-dashed border-slate-500/30 spin-reverse" style="animation-duration: 40s;"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[260px] h-[260px] lg:w-[300px] lg:h-[300px] xl:w-[340px] xl:h-[340px] rounded-full border-[1px] border-dotted border-slate-600/40 spin-fast" style="animation-duration: 60s;"></div>
+              <!-- Large Outer Boundary Ring (Mathematically concentric via standard negative inset) -->
+              <div class="absolute -inset-6 lg:-inset-7 xl:-inset-9 rounded-full flex items-center justify-center pointer-events-none z-0">
+                <div class="absolute inset-0 rounded-full border-[1px] border-dashed border-slate-500/30 spin-reverse" style="animation-duration: 40s;"></div>
+                <div class="absolute -inset-2.5 rounded-full border-[1px] border-dotted border-slate-600/40 spin-fast" style="animation-duration: 60s;"></div>
               </div>
               
               <!-- 3D Atomic Orbits -->
@@ -72,7 +72,7 @@ interface CarouselSlide {
               <!-- Refined Floating Center Logo -->
               <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-24 h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-full bg-slate-950/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_35px_rgba(59,130,246,0.25)] p-3 backdrop-blur-md">
                 <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-1">
-                  <img src="/logo.png" class="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 object-contain hover:scale-110 transition-transform duration-500" alt="IIIT Ranchi Emblem" />
+                  <img src="/logo.png" class="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 object-contain transition-transform duration-500" alt="IIIT Ranchi Emblem" />
                 </div>
               </div>
             </div>
