@@ -48,10 +48,10 @@ interface CarouselSlide {
           <div class="relative z-10 flex flex-col items-center justify-center text-center py-2">
             <div class="relative w-40 h-40 lg:w-48 lg:h-48 xl:w-56 xl:h-56 shrink-0 flex items-center justify-center">
               
-              <!-- Large Outer Boundary Ring (Mathematically concentric via inset) -->
-              <div class="absolute inset-[-24px] lg:inset-[-28px] xl:inset-[-36px] rounded-full flex items-center justify-center pointer-events-none z-0">
-                <div class="absolute inset-0 rounded-full border-[1px] border-dashed border-slate-500/30 spin-reverse" style="animation-duration: 40s;"></div>
-                <div class="absolute inset-[-10px] rounded-full border-[1px] border-dotted border-slate-600/40 spin-fast" style="animation-duration: 60s;"></div>
+              <!-- Large Outer Boundary Ring (Mathematically concentric via explicit width/translation) -->
+              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] h-[240px] lg:w-[280px] lg:h-[280px] xl:w-[320px] xl:h-[320px] rounded-full flex items-center justify-center pointer-events-none z-0">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border-[1px] border-dashed border-slate-500/30 spin-reverse" style="animation-duration: 40s;"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[260px] h-[260px] lg:w-[300px] lg:h-[300px] xl:w-[340px] xl:h-[340px] rounded-full border-[1px] border-dotted border-slate-600/40 spin-fast" style="animation-duration: 60s;"></div>
               </div>
               
               <!-- 3D Atomic Orbits -->
