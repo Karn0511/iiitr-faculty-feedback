@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { SpinnerComponent } from './shared/components/spinner/spinner.component';
 import { ThemeService } from './core/services/theme.service';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +20,11 @@ import { ThemeService } from './core/services/theme.service';
 export class AppComponent implements OnInit {
   // Inject ThemeService to trigger dark-mode enforcement at app startup
   private _theme = inject(ThemeService);
+
+  constructor() {
+    // Initialize Vercel Speed Insights telemetry
+    injectSpeedInsights();
+  }
 
   async ngOnInit() {
     try {
