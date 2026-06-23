@@ -19,7 +19,7 @@ const signToken = (user) => {
 // CORE: Set the JWT as a secure HTTP-only cookie and respond
 // All auth paths funnel through this single issuer function.
 // ============================================================
-const sendTokenResponse = (user, statusCode, res, message = 'Authentication successful') => {
+const sendTokenResponse = async (user, statusCode, req, res, message = 'Authentication successful') => {
     const token = signToken(user);
 
     const expireDays = parseInt(process.env.JWT_EXPIRES_IN) || 1;
@@ -33,6 +33,26 @@ const sendTokenResponse = (user, statusCode, res, message = 'Authentication succ
 
     const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
     res.cookie(cookieName, token, cookieOptions);
+
+    // Register active session in the database
+    try {
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        const uaParser = require('../utils/uaParser');
+        const { browser, os } = uaParser(userAgent);
+        const Session = require('../models/Session');
+        
+        await Session.create({
+            userId: user._id,
+            tokenHash,
+            userAgent,
+            browser,
+            os,
+            ipAddress: req.ip || req.connection.remoteAddress || 'Unknown'
+        });
+    } catch (err) {
+        console.error('❌ Failed to register session in database:', err.message);
+    }
 
     res.status(statusCode).json({
         success: true,
@@ -72,6 +92,26 @@ exports.loginSuccessHandler = async (req, res) => {
 
     const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
     res.cookie(cookieName, token, cookieOptions);
+
+    // Register active session in the database
+    try {
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        const uaParser = require('../utils/uaParser');
+        const { browser, os } = uaParser(userAgent);
+        const Session = require('../models/Session');
+        
+        await Session.create({
+            userId: req.user._id,
+            tokenHash,
+            userAgent,
+            browser,
+            os,
+            ipAddress: req.ip || req.connection.remoteAddress || 'Unknown'
+        });
+    } catch (err) {
+        console.error('❌ Failed to register OAuth session in database:', err.message);
+    }
 
     // Audit log
     await logEvent(req.user._id, AUDIT_ACTIONS.LOGIN_SUCCESS, '/api/auth/google/callback', req, {
@@ -120,7 +160,7 @@ exports.registerLocal = async (req, res) => {
             method: 'local_register'
         });
 
-        sendTokenResponse(newUser, 201, res, 'Registration successful');
+        await sendTokenResponse(newUser, 201, req, res, 'Registration successful');
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
     }
@@ -145,7 +185,7 @@ exports.loginLocal = (req, res, next) => {
             method: 'local_password'
         });
 
-        sendTokenResponse(user, 200, res, 'Login successful');
+        await sendTokenResponse(user, 200, req, res, 'Login successful');
     })(req, res, next);
 };
 
@@ -154,11 +194,18 @@ exports.loginLocal = (req, res, next) => {
 // ============================================================
 exports.logout = async (req, res) => {
     const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
+    const sudoCookieName = process.env.NODE_ENV === 'production' ? '__Host-sudo' : 'sudo';
 
-    // Audit log (if user is authenticated)
+    // Audit log & Session Removal (if user is authenticated)
     if (req.cookies?.[cookieName] && req.cookies[cookieName] !== 'loggedout') {
         try {
             const decoded = jwt.verify(req.cookies[cookieName], process.env.JWT_SECRET);
+            
+            // Delete active session record
+            const tokenHash = crypto.createHash('sha256').update(req.cookies[cookieName]).digest('hex');
+            const Session = require('../models/Session');
+            await Session.deleteOne({ userId: decoded.id, tokenHash });
+
             await logEvent(decoded.id, AUDIT_ACTIONS.LOGOUT, '/api/auth/logout', req);
         } catch (_) {
             // Token might be expired — that's fine for logout
@@ -172,6 +219,16 @@ exports.logout = async (req, res) => {
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path:     '/'
     });
+
+    // Clear sudo mode cookie as well
+    res.cookie(sudoCookieName, 'loggedout', {
+        expires:  new Date(Date.now() + 1000),
+        httpOnly: true,
+        secure:   process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path:     '/'
+    });
+
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
@@ -242,7 +299,7 @@ exports.verifyOTP = async (req, res) => {
             method: 'otp'
         });
 
-        sendTokenResponse(user, 200, res, 'OTP verified successfully');
+        await sendTokenResponse(user, 200, req, res, 'OTP verified successfully');
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to verify OTP.' });
     }
@@ -310,8 +367,127 @@ exports.changePassword = async (req, res) => {
         await logEvent(user._id, AUDIT_ACTIONS.PASSWORD_CHANGED, '/api/auth/change-password', req);
 
         // Issue a new token response (old tokens are now invalid)
-        sendTokenResponse(user, 200, res, 'Password updated successfully');
+        await sendTokenResponse(user, 200, req, res, 'Password updated successfully');
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to change password.' });
+    }
+};
+
+// ============================================================
+// GET ALL ACTIVE SESSIONS
+// ============================================================
+exports.getActiveSessions = async (req, res) => {
+    try {
+        const Session = require('../models/Session');
+        const sessions = await Session.find({ userId: req.user.id }).sort({ lastActive: -1 });
+
+        const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
+        const currentToken = req.cookies[cookieName] || 
+                             (req.headers.authorization && req.headers.authorization.startsWith('Bearer') ? req.headers.authorization.split(' ')[1] : null);
+        
+        let currentTokenHash = '';
+        if (currentToken) {
+            currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
+        }
+
+        const formattedSessions = sessions.map(s => {
+            return {
+                id: s._id,
+                browser: s.browser,
+                os: s.os,
+                ipAddress: s.ipAddress,
+                lastActive: s.lastActive,
+                isCurrent: currentTokenHash === s.tokenHash
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: { sessions: formattedSessions }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to retrieve active sessions.' });
+    }
+};
+
+// ============================================================
+// REVOKE / TERMINATE SESSION
+// ============================================================
+exports.revokeSession = async (req, res) => {
+    try {
+        const Session = require('../models/Session');
+        const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user.id });
+
+        if (!session) {
+            return res.status(404).json({ success: false, message: 'Session not found or already expired.' });
+        }
+
+        // Delete active session record
+        await Session.findByIdAndDelete(session._id);
+
+        await logEvent(req.user.id, AUDIT_ACTIONS.LOGOUT, `/api/auth/sessions/${req.params.sessionId}`, req, {
+            info: 'Session terminated remotely by user'
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Session revoked successfully. Device signed out.'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to revoke session.' });
+    }
+};
+
+// ============================================================
+// VERIFY PASSWORD FOR SUDO MODE
+// ============================================================
+exports.enterSudoMode = async (req, res) => {
+    try {
+        const { password } = req.body;
+        if (!password) {
+            return res.status(400).json({ success: false, message: 'Password is required' });
+        }
+
+        const user = await User.findById(req.user.id).select('+password');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const isMatch = await user.correctPassword(password, user.password);
+        if (!isMatch) {
+            await logEvent(req.user.id, AUDIT_ACTIONS.LOGIN_FAILED, '/api/auth/sudo', req, {
+                reason: 'Incorrect sudo password'
+            });
+
+            return res.status(401).json({ success: false, message: 'Incorrect password.' });
+        }
+
+        // Sudo token valid for 5 minutes
+        const sudoToken = jwt.sign(
+            { id: user._id, sudo: true },
+            process.env.JWT_SECRET,
+            { expiresIn: '5m' }
+        );
+
+        const sudoCookieName = process.env.NODE_ENV === 'production' ? '__Host-sudo' : 'sudo';
+        res.cookie(sudoCookieName, sudoToken, {
+            expires:  new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+            httpOnly: true,
+            secure:   process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path:     '/'
+        });
+
+        await logEvent(req.user.id, AUDIT_ACTIONS.LOGIN_SUCCESS, '/api/auth/sudo', req, {
+            info: 'Entered sudo mode successfully',
+            sudo: true
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Sudo mode activated successfully for 5 minutes.'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to verify credentials for Sudo mode.' });
     }
 };

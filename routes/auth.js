@@ -81,4 +81,11 @@ router.get('/google/failure', (req, res) => {
 router.get('/me', protect, authController.getMe);
 router.put('/change-password', protect, passwordChangeLimiter, validatePasswordChange, authController.changePassword);
 
+// ============================================================
+// PROTECTED: Active Session Management & Sudo Mode (GitHub Standards)
+// ============================================================
+router.get('/sessions',               protect, authController.getActiveSessions);
+router.delete('/sessions/:sessionId', protect, authController.revokeSession);
+router.post('/sudo',                  protect, authController.enterSudoMode);
+
 module.exports = router;

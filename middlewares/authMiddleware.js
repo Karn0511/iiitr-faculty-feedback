@@ -35,6 +35,22 @@ exports.protect = async (req, res, next) => {
         // Verify token signature and expiry
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+        // Enforce active session check in database
+        const crypto = require('crypto');
+        const Session = require('../models/Session');
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+        const session = await Session.findOne({ userId: decoded.id, tokenHash });
+        if (!session) {
+            return res.status(401).json({
+                success: false,
+                message: 'Your session has expired or been revoked. Please log in again.'
+            });
+        }
+
+        // Update last active activity (non-blocking)
+        Session.findByIdAndUpdate(session._id, { lastActive: new Date() }).exec();
+
         // Confirm the user still exists in DB (handles deleted account edge case)
         const currentUser = await User.findById(decoded.id)
             .select('+passwordChangedAt +failedLoginAttempts +lockUntil');
@@ -106,4 +122,41 @@ exports.restrictTo = (...roles) => {
         }
         next();
     };
+};
+
+// ============================================================
+// REQUIRE SUDO: Guard high-risk routes behind 5m credential check
+// ============================================================
+exports.requireSudo = async (req, res, next) => {
+    try {
+        const sudoCookieName = process.env.NODE_ENV === 'production' ? '__Host-sudo' : 'sudo';
+        const sudoToken = req.cookies?.[sudoCookieName];
+
+        if (!sudoToken) {
+            return res.status(403).json({
+                success: false,
+                sudoRequired: true,
+                message: 'Security verification required. Please enter your password to proceed.'
+            });
+        }
+
+        const decodedSudo = jwt.verify(sudoToken, process.env.JWT_SECRET);
+
+        // Verify that the sudo session belongs to the authenticated user
+        if (decodedSudo.id !== req.user.id || !decodedSudo.sudo) {
+            return res.status(403).json({
+                success: false,
+                sudoRequired: true,
+                message: 'Invalid security verification context. Please re-authenticate.'
+            });
+        }
+
+        next();
+    } catch (error) {
+        return res.status(403).json({
+            success: false,
+            sudoRequired: true,
+            message: 'Security verification expired. Please enter your password to proceed.'
+        });
+    }
 };

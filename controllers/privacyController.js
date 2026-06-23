@@ -387,3 +387,25 @@ exports.getGrievanceInfo = async (req, res) => {
         }
     });
 };
+
+// ─────────────────────────────────────────────────────────────
+// 8. SECURITY LOGS STREAM — GET /api/privacy/security-events
+// Google/Stripe Standards: User audits recent security events
+// ─────────────────────────────────────────────────────────────
+exports.getMySecurityEvents = async (req, res) => {
+    try {
+        const AuditLog = require('../models/AuditLog');
+        
+        // Retrieve last 100 security events for this user, ordered by timestamp descending
+        const logs = await AuditLog.find({ userId: req.user.id })
+            .sort({ timestamp: -1 })
+            .limit(100);
+
+        res.status(200).json({
+            success: true,
+            data: { logs }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to retrieve security event history.' });
+    }
+};
