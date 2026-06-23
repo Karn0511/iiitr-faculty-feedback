@@ -149,9 +149,13 @@ exports.eraseMyData = async (req, res) => {
         });
 
         // Clear JWT cookie
-        res.cookie('jwt', 'erased', {
-            expires: new Date(Date.now() + 1000),
-            httpOnly: true
+        const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
+        res.cookie(cookieName, 'erased', {
+            expires:  new Date(Date.now() + 1000),
+            httpOnly: true,
+            secure:   process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path:     '/'
         });
 
         res.status(200).json({

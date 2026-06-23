@@ -14,10 +14,11 @@ const { logEvent, AUDIT_ACTIONS } = require('./auditLogger');
 exports.protect = async (req, res, next) => {
     try {
         let token;
+        const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
 
         // Priority 1: HTTP-only cookie (preferred — XSS safe)
-        if (req.cookies && req.cookies.jwt) {
-            token = req.cookies.jwt;
+        if (req.cookies && req.cookies[cookieName]) {
+            token = req.cookies[cookieName];
         }
         // Priority 2: Authorization header (for API clients / mobile)
         else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {

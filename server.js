@@ -32,7 +32,7 @@ const app = express();
 app.set('trust proxy', 1); // Trust the first hop from the reverse proxy (Render) securely
 
 // ============================================================
-// REQUEST ID & CUSTOM SECURITY HEADERS
+// REQUEST ID & CUSTOM SECURITY HEADERS & CSP NONCE GENERATION
 // ============================================================
 app.use((req, res, next) => {
     req.id = crypto.randomUUID();
@@ -41,6 +41,9 @@ app.use((req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("X-XSS-Protection", "1; mode=block");
+    
+    // Generate dynamic nonce per request for CSP
+    res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
     next();
 });
 
@@ -51,11 +54,16 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`],
+            styleSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`, "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:"]
         }
+    },
+    hsts: {
+        maxAge: 63072000, // 2 years in seconds (required for preloading)
+        includeSubDomains: true,
+        preload: true
     }
 }));
 
@@ -79,7 +87,10 @@ app.use(cors({
             return callback(new Error(errorMsg), false);
         }
     },
-    credentials: true                // Allow cookies across origins
+    credentials: true,               // Allow cookies across origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Request-Id'],
+    exposedHeaders: ['X-Request-Id']
 }));
 
 // ============================================================
@@ -106,6 +117,24 @@ app.use('/api/privacy',          require('./routes/privacy'));
 app.use('/api/student',          require('./routes/student'));
 app.use('/api/faculty',          require('./routes/faculty'));
 
+// ============================================================
+// RESPONSIBLE DISCLOSURE (RFC 9116 security.txt)
+// ============================================================
+const securityTxtContent = [
+    `Contact: mailto:security@iiitranchi.ac.in`,
+    `Expires: 2027-06-23T00:00:00.000Z`,
+    `Preferred-Languages: en`,
+    `Canonical: https://iiitr-faculty-feedback.onrender.com/.well-known/security.txt`,
+    `Policy: https://iiitr-faculty-feedback.vercel.app/privacy-notice`
+].join('\n');
+
+app.get('/.well-known/security.txt', (req, res) => {
+    res.type('text/plain').send(securityTxtContent);
+});
+
+app.get('/security.txt', (req, res) => {
+    res.redirect(301, '/.well-known/security.txt');
+});
 
 const mongoose = require('mongoose');
 const os = require('os');
@@ -145,7 +174,7 @@ app.get('/health', (req, res) => {
     <meta name="color-scheme" content="dark">
     <title>IIIT Ranchi — System Health Status</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
+    <style nonce="${res.locals.cspNonce}">
         :root {
             --bg-color: #030712;
             --card-bg: rgba(15, 23, 42, 0.7);
@@ -596,7 +625,7 @@ app.get('/health', (req, res) => {
             <div class="diagnostic-section">
                 <div class="diagnostic-header">
                     <span class="diagnostic-title">Diagnostic Stream</span>
-                    <button class="refresh-btn" onclick="window.location.reload()">🔄 Refresh Telemetry</button>
+                    <button class="refresh-btn" id="refresh-btn">🔄 Refresh Telemetry</button>
                 </div>
                 <div class="terminal">
                     <div class="log-entry">
@@ -621,7 +650,7 @@ app.get('/health', (req, res) => {
     </div>
 
     <!-- Live Uptime Script -->
-    <script>
+    <script nonce="${res.locals.cspNonce}">
         let uptimeSec = ${Math.floor(systemInfo.uptime)};
         setInterval(() => {
             uptimeSec++;
@@ -638,6 +667,11 @@ app.get('/health', (req, res) => {
             
             document.getElementById('uptime-val').innerText = display;
         }, 1000);
+
+        // Bind refresh action securely without inline JS handlers
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            window.location.reload();
+        });
     </script>
 </body>
 </html>

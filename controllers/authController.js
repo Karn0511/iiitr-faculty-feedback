@@ -27,10 +27,12 @@ const sendTokenResponse = (user, statusCode, res, message = 'Authentication succ
         expires:  new Date(Date.now() + expireDays * 24 * 60 * 60 * 1000), // Dynamic matching
         httpOnly: true, // Not accessible via JS — XSS protection (Auto-accepted by browser, no frontend prompt needed)
         secure:   process.env.NODE_ENV === 'production',       // HTTPS only in prod
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path:     '/'                                          // Strictly required for __Host- cookie prefix
     };
 
-    res.cookie('jwt', token, cookieOptions);
+    const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
+    res.cookie(cookieName, token, cookieOptions);
 
     res.status(statusCode).json({
         success: true,
@@ -64,10 +66,12 @@ exports.loginSuccessHandler = async (req, res) => {
         expires:  new Date(Date.now() + expireDays * 24 * 60 * 60 * 1000), // Dynamic matching
         httpOnly: true, // Not accessible via JS — XSS protection (Auto-accepted by browser, no frontend prompt needed)
         secure:   process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path:     '/'
     };
 
-    res.cookie('jwt', token, cookieOptions);
+    const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
+    res.cookie(cookieName, token, cookieOptions);
 
     // Audit log
     await logEvent(req.user._id, AUDIT_ACTIONS.LOGIN_SUCCESS, '/api/auth/google/callback', req, {
@@ -149,19 +153,24 @@ exports.loginLocal = (req, res, next) => {
 // LOGOUT: Clear the JWT cookie
 // ============================================================
 exports.logout = async (req, res) => {
+    const cookieName = process.env.NODE_ENV === 'production' ? '__Host-jwt' : 'jwt';
+
     // Audit log (if user is authenticated)
-    if (req.cookies?.jwt && req.cookies.jwt !== 'loggedout') {
+    if (req.cookies?.[cookieName] && req.cookies[cookieName] !== 'loggedout') {
         try {
-            const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET);
+            const decoded = jwt.verify(req.cookies[cookieName], process.env.JWT_SECRET);
             await logEvent(decoded.id, AUDIT_ACTIONS.LOGOUT, '/api/auth/logout', req);
         } catch (_) {
             // Token might be expired — that's fine for logout
         }
     }
 
-    res.cookie('jwt', 'loggedout', {
+    res.cookie(cookieName, 'loggedout', {
         expires:  new Date(Date.now() + 1000),
-        httpOnly: true
+        httpOnly: true,
+        secure:   process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path:     '/'
     });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
