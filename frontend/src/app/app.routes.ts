@@ -31,6 +31,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
   },
+  {
+    path: 'privacy-settings',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/privacy-settings/privacy-settings.component').then(m => m.PrivacySettingsComponent)
+  },
 
   // ── Protected: Admin portal (lazy)
   {

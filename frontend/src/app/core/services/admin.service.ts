@@ -74,6 +74,10 @@ export class AdminService {
     return this.http.get<any>(url, { withCredentials: true });
   }
 
+  getStudentParticipation(): Observable<{ success: boolean; data: { participation: any[] } }> {
+    return this.http.get<any>(`${this.API}/student-participation`, { withCredentials: true });
+  }
+
   uploadStudents(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);

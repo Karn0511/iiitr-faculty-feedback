@@ -145,26 +145,35 @@ interface NavItem {
                 </svg>
               </button>
 
-              <!-- Dropdown -->
-              <div *ngIf="menuOpen()"
-                   class="absolute right-0 top-12 w-56 glass-card rounded-2xl border border-surface-border
-                          shadow-card py-2 animate-fade-in">
-                <div class="px-4 py-3 border-b border-surface-border">
-                  <p class="text-white font-semibold text-sm truncate">{{ user()?.name }}</p>
-                  <p class="text-slate-400 text-xs truncate">{{ user()?.email }}</p>
+                <!-- Dropdown -->
+                <div *ngIf="menuOpen()"
+                     class="absolute right-0 top-12 w-56 glass-card rounded-2xl border border-surface-border
+                            shadow-card py-2 animate-fade-in">
+                  <div class="px-4 py-3 border-b border-surface-border">
+                    <p class="text-white font-semibold text-sm truncate">{{ user()?.name }}</p>
+                    <p class="text-slate-400 text-xs truncate">{{ user()?.email }}</p>
+                  </div>
+                  <div class="py-1">
+                    <a routerLink="/privacy-settings" (click)="menuOpen.set(false)"
+                       class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300
+                              hover:bg-surface-hover hover:text-white transition-colors duration-150 cursor-pointer">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                      </svg>
+                      Security & Privacy
+                    </a>
+                    <button (click)="logout()"
+                            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-400
+                                   hover:bg-rose-500/10 hover:text-rose-300 transition-colors duration-150 text-left">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                      </svg>
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
-                <div class="py-1">
-                  <button (click)="logout()"
-                          class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-400
-                                 hover:bg-rose-500/10 hover:text-rose-300 transition-colors duration-150">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                    Sign Out
-                  </button>
-                </div>
-              </div>
             </div>
 
             <!-- Login button (if not logged in) -->

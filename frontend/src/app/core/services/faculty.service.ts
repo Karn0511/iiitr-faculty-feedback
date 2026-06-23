@@ -10,6 +10,7 @@ export interface FacultyStats {
   averageScore: number;
   detailedRatings: { questionId: string; questionText: string; average: number }[];
   totalSubmissions: number;
+  classBreakdown?: { className: string; reviewCount: number }[];
 }
 
 @Injectable({ providedIn: 'root' })

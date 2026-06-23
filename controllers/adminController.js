@@ -931,4 +931,75 @@ async function runSentimentVelocityCheck() {
     } catch (err) {
         console.error('⚠️ Sentiment Velocity check failed:', err.message);
     }
-}
+};
+
+// ============================================================
+// GET STUDENT PARTICIPATION STATS
+// Route:    GET /api/admin/student-participation
+// Protected: Admin only
+// ============================================================
+exports.getStudentParticipation = async (req, res) => {
+    try {
+        const User = require('../models/User');
+        const Assignment = require('../models/Assignment');
+        const Feedback = require('../models/Feedback');
+
+        const students = await User.find({ role: 'Student' })
+            .select('name email rollNo section semester')
+            .sort({ rollNo: 1 })
+            .lean();
+
+        const assignmentsCount = await Assignment.aggregate([
+            {
+                $group: {
+                    _id: { section: '$section', semester: '$semester' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const assignmentMap = {};
+        assignmentsCount.forEach(a => {
+            assignmentMap[`${a._id.section}_${a._id.semester}`] = a.count;
+        });
+
+        const feedbackCounts = await Feedback.aggregate([
+            {
+                $group: {
+                    _id: '$studentId',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const feedbackMap = {};
+        feedbackCounts.forEach(f => {
+            feedbackMap[f._id.toString()] = f.count;
+        });
+
+        const participation = students.map(s => {
+            const totalAssigned = assignmentMap[`${s.section}_${s.semester}`] || 0;
+            const submittedCount = feedbackMap[s._id.toString()] || 0;
+            return {
+                _id: s._id,
+                name: s.name,
+                email: s.email,
+                rollNo: s.rollNo,
+                section: s.section,
+                semester: s.semester,
+                feedbackCount: submittedCount,
+                totalAssigned,
+                submitted: totalAssigned > 0 && submittedCount >= totalAssigned
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            count: participation.length,
+            data: { participation }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+

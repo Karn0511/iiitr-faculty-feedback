@@ -86,7 +86,9 @@ import { FormsModule } from '@angular/forms';
                       Pending
                     </span>
                   </td>
-                  <td class="py-3 px-4 text-slate-300 font-bold">{{ student.feedbackCount || 0 }}</td>
+                  <td class="py-3 px-4 text-slate-300 font-bold">
+                    {{ student.feedbackCount || 0 }} / {{ student.totalAssigned || 0 }}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -205,14 +207,13 @@ export class AdminFeedbackAnalyticsComponent implements OnInit {
       error: () => {}
     });
 
-    // Mock student data for now
-    this.studentsList.set([
-      { name: 'Karn Ashutosh', rollNo: '2026-CS-42', section: 'A', submitted: true, feedbackCount: 4 },
-      { name: 'Raj Kumar', rollNo: '2026-CS-43', section: 'A', submitted: true, feedbackCount: 3 },
-      { name: 'Priya Singh', rollNo: '2026-CS-44', section: 'B', submitted: false, feedbackCount: 0 },
-      { name: 'Amit Patel', rollNo: '2026-CS-45', section: 'B', submitted: true, feedbackCount: 4 },
-      { name: 'Sneha Das', rollNo: '2026-CS-46', section: 'A', submitted: false, feedbackCount: 0 }
-    ]);
+    // Load student participation details
+    this.admin.getStudentParticipation().subscribe({
+      next: (res: any) => {
+        this.studentsList.set(res?.data?.participation || []);
+      },
+      error: () => {}
+    });
   }
 
   getParticipationRate(): number {

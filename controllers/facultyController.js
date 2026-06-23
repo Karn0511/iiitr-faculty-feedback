@@ -117,6 +117,54 @@ exports.getDashboardStats = async (req, res) => {
 
         const stats = await Feedback.aggregate(pipeline);
 
+        // Fetch section/semester class breakdown for all courses of this faculty member
+        const classBreakdown = await Feedback.aggregate([
+            { $match: { facultyId } },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'studentId',
+                    foreignField: '_id',
+                    as: 'studentInfo'
+                }
+            },
+            { $unwind: '$studentInfo' },
+            {
+                $group: {
+                    _id: {
+                        courseId: '$courseId',
+                        section: '$studentInfo.section',
+                        semester: '$studentInfo.semester'
+                    },
+                    reviewCount: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    courseId: '$_id.courseId',
+                    section: '$_id.section',
+                    semester: '$_id.semester',
+                    reviewCount: 1
+                }
+            }
+        ]);
+
+        // Attach class breakdown to each course's stats
+        const enrichedStats = stats.map(s => {
+            const courseBreakdown = classBreakdown
+                .filter(b => b.courseId.toString() === s.courseId.toString())
+                .map(b => ({
+                    className: `Section ${b.section} • Semester ${b.semester || 'N/A'}`,
+                    reviewCount: b.reviewCount
+                }));
+
+            return {
+                ...s,
+                classBreakdown: courseBreakdown
+            };
+        });
+
         res.status(200).json({
             success: true,
             faculty: {
@@ -124,8 +172,8 @@ exports.getDashboardStats = async (req, res) => {
                 name: req.user.name,
                 email:req.user.email
             },
-            courseCount: stats.length,
-            data: { stats }
+            courseCount: enrichedStats.length,
+            data: { stats: enrichedStats }
         });
 
     } catch (error) {

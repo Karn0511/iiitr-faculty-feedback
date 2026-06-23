@@ -59,6 +59,9 @@ router.get('/users', adminController.getAllUsers);
 // GET /api/admin/stats       — Total students, faculty, feedback, avg institute score
 router.get('/stats', adminController.getGlobalStats);
 
+// GET /api/admin/student-participation — Student feedback completion status
+router.get('/student-participation', adminController.getStudentParticipation);
+
 // GET /api/admin/leaderboard — Faculty ranked by average score (top 50)
 router.get('/leaderboard', adminController.getFacultyLeaderboard);
 

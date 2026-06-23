@@ -172,22 +172,14 @@ export class FacultyInsightsComponent implements OnInit {
   selectCourse(course: FacultyStats) {
     this.selectedCourse.set(course);
 
-    // Mock data for class/semester breakdown (Section, Batch Year, Semester, Review Count)
-    this.classSemesterData.set([
-      { className: 'Section A - Batch 2024', semester: 'Semester 4', reviewCount: 42, batchYear: '2024', section: 'A' },
-      { className: 'Section B - Batch 2024', semester: 'Semester 4', reviewCount: 38, batchYear: '2024', section: 'B' },
-      { className: 'Section A - Batch 2023', semester: 'Semester 6', reviewCount: 51, batchYear: '2023', section: 'A' },
-      { className: 'Section B - Batch 2023', semester: 'Semester 6', reviewCount: 44, batchYear: '2023', section: 'B' },
-      { className: 'Section A - Batch 2022', semester: 'Semester 8', reviewCount: 58, batchYear: '2022', section: 'A' }
-    ]);
+    // Set dynamic class breakdown from MongoDB aggregation
+    this.classSemesterData.set(course.classBreakdown || []);
 
-    // Mock data for question scores - comprehensive evaluation criteria
-    this.questionScores.set([
-      { question: 'Subject Knowledge & Preparation', score: 8.7 },
-      { question: 'Communication & Clarity', score: 8.4 },
-      { question: 'Syllabus Coverage & Punctuality', score: 8.9 },
-      { question: 'Accessibility & Student Support', score: 8.2 },
-      { question: 'Course Materials & Resources', score: 8.6 },
-      { question: 'Assessment Fairness', score: 8.5 }
-    ]);
-}
+    // Set dynamic question scores from detailed ratings array
+    this.questionScores.set(
+      (course.detailedRatings || []).map(q => ({
+        question: q.questionText,
+        score: q.average
+      }))
+    );
+  }
