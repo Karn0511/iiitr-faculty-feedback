@@ -228,23 +228,7 @@ interface CarouselSlide {
               <p class="text-slate-400 text-xs font-semibold">Enter your authorized institutional credentials to continue securely.</p>
             </div>
 
-            <!-- ROLE SPECIFIC SANDBOX PROFILES DRAWER -->
-            <div class="p-4 rounded-2xl border border-dashed border-brand-500/25 bg-brand-500/5">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-[10px] font-bold text-brand-300 uppercase tracking-wider flex items-center gap-1.5">
-                  🔑 Sandbox Credentials Profile
-                </span>
-                <span class="text-[9px] bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded-full font-bold">🎲 Random</span>
-              </div>
-              <button (click)="useDemoProfile(role)"
-                      class="w-full flex items-center justify-between p-3 rounded-xl border border-slate-800/60 bg-slate-950/60 hover:bg-slate-900/60 hover:border-brand-500/30 transition-all text-left group">
-                <div class="min-w-0">
-                  <div class="text-xs font-bold text-white uppercase truncate">{{ sandboxLabel() }}</div>
-                  <div class="text-[10px] text-slate-500 font-mono mt-0.5">Tap again to shuffle ↺</div>
-                </div>
-                <span class="text-[10px] font-black text-brand-400 uppercase tracking-widest flex-shrink-0 ml-3 group-hover:text-brand-300 transition-colors">TAP TO AUTOFILL ➔</span>
-              </button>
-            </div>
+
 
             <!-- Login tabs (Password vs OTP) - Only shown if not admin -->
             <div *ngIf="role !== 'admin'" class="grid grid-cols-2 p-1 bg-slate-950 rounded-xl border border-slate-800">
@@ -352,8 +336,8 @@ interface CarouselSlide {
               </button>
             </form>
 
-            <!-- Role specific Google oauth redirect - Only for faculty -->
-            <div *ngIf="role === 'faculty'" class="space-y-4">
+            <!-- Role specific Google oauth redirect - For faculty and students -->
+            <div *ngIf="role === 'faculty' || role === 'student'" class="space-y-4">
               <div class="flex items-center gap-3">
                 <div class="flex-1 h-px bg-slate-800"></div>
                 <span class="text-slate-500 text-[9px] font-black uppercase tracking-widest">Or login with</span>
@@ -809,8 +793,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   bootProgress   = signal(0);
   bootingRole    = signal<string>('student'); // Actual authenticated role (not UI selection)
 
-  // Sandbox profile random label (updates on each autofill tap)
-  sandboxLabel   = signal<string>('Tap to auto-fill a random account');
+
 
   // Left Panel features slides carousel
   activeSlideIndex = signal(0);
@@ -959,50 +942,6 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   setSlide(index: number) {
     this.activeSlideIndex.set(index);
-  }
-
-  useDemoProfile(role: 'student' | 'faculty' | 'admin') {
-    // Full sandbox roster — all seeded accounts
-    const SANDBOX: Record<string, { email: string; pass: string; name: string }[]> = {
-      student: [
-        { name: 'Aarav Sharma',   email: 'aarav.sharma@iiitranchi.ac.in',   pass: 'IIITR@2026' },
-        { name: 'Ananya Verma',   email: 'ananya.verma@iiitranchi.ac.in',   pass: 'IIITR@2026' },
-        { name: 'Kabir Gupta',    email: 'kabir.gupta@iiitranchi.ac.in',    pass: 'IIITR@2026' },
-        { name: 'Ishaan Roy',     email: 'ishaan.roy@iiitranchi.ac.in',     pass: 'IIITR@2026' },
-        { name: 'Sanya Iyer',     email: 'sanya.iyer@iiitranchi.ac.in',     pass: 'IIITR@2026' },
-        { name: 'Diya Sen',       email: 'diya.sen@iiitranchi.ac.in',       pass: 'IIITR@2026' },
-        { name: 'Rohan Mehta',    email: 'rohan.mehta@iiitranchi.ac.in',    pass: 'IIITR@2026' },
-        { name: 'Aditi Rao',      email: 'aditi.rao@iiitranchi.ac.in',      pass: 'IIITR@2026' },
-        { name: 'Aryan Joshi',    email: 'aryan.joshi@iiitranchi.ac.in',    pass: 'IIITR@2026' },
-        { name: 'Meera Nair',     email: 'meera.nair@iiitranchi.ac.in',     pass: 'IIITR@2026' },
-        { name: 'Pranav Saxena',  email: 'pranav.saxena@iiitranchi.ac.in',  pass: 'IIITR@2026' },
-        { name: 'Kirti Mishra',   email: 'kirti.mishra@iiitranchi.ac.in',   pass: 'IIITR@2026' },
-        { name: 'Devansh Patil',  email: 'devansh.patil@iiitranchi.ac.in',  pass: 'IIITR@2026' },
-        { name: 'Nisha Reddy',    email: 'nisha.reddy@iiitranchi.ac.in',    pass: 'IIITR@2026' },
-        { name: 'Yash Kapoor',    email: 'yash.kapoor@iiitranchi.ac.in',    pass: 'IIITR@2026' },
-        // Legacy seed account
-        { name: 'Karn Ashutosh',  email: 'student@iiitranchi.ac.in',        pass: 'student123' }
-      ],
-      faculty: [
-        { name: 'Dr. R. K. Singh',   email: 'rk.singh@iiitranchi.ac.in',     pass: 'faculty123' },
-        { name: 'Prof. Sneha Das',   email: 'sneha.das@iiitranchi.ac.in',    pass: 'faculty123' },
-        { name: 'Dr. Vikram Seth',   email: 'vikram.seth@iiitranchi.ac.in',  pass: 'faculty123' },
-        { name: 'Dr. Manoj Dubey',   email: 'manoj.dubey@iiitranchi.ac.in',  pass: 'faculty123' },
-        { name: 'Prof. Priya Nair',  email: 'priya.nair@iiitranchi.ac.in',   pass: 'faculty123' },
-        // Legacy seed account
-        { name: 'Dr. Amit Kumar',    email: 'faculty@iiitranchi.ac.in',      pass: 'faculty123' }
-      ],
-      admin: [
-        { name: 'System Admin',  email: 'admin@iiitranchi.ac.in',  pass: 'admin123' }
-      ]
-    };
-
-    const pool = SANDBOX[role];
-    // Pick a random profile from the pool on every tap
-    const pick = pool[Math.floor(Math.random() * pool.length)];
-    this.loginForm.patchValue({ email: pick.email, password: pick.pass });
-    // Also update the sandbox label display
-    this.sandboxLabel.set(pick.name);
   }
 
   onSubmit() {

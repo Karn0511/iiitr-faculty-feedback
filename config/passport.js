@@ -105,9 +105,9 @@ passport.use(
             // Find the existing user
             let user = await User.findOne({ email });
 
-            if (!user || (user.role !== 'Faculty' && user.role !== 'Admin')) {
+            if (!user) {
                 return done(null, false, {
-                    message: 'Access denied. Google SSO is scoped exclusively for Faculty. Students must login via Roll Number.'
+                    message: 'Access denied. Your email is not pre-registered in the system. Please contact the administrator.'
                 });
             }
 
