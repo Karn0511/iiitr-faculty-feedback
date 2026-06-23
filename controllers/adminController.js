@@ -5,6 +5,7 @@ const User = require('../models/User');
 const FeedbackSession = require('../models/FeedbackSession');
 const Course = require('../models/Course');
 const Assignment = require('../models/Assignment');
+const { logEvent, AUDIT_ACTIONS } = require('../middlewares/auditLogger');
 
 // ============================================================
 // UPLOAD STUDENT DATA — CSV Bulk Ingestion
@@ -98,6 +99,11 @@ exports.uploadStudentData = async (req, res) => {
 
         // Step 3: Bulk insert — ordered:false continues on duplicate key errors
         const insertResult = await User.insertMany(usersToInsert, { ordered: false });
+
+        await logEvent(req.user.id, AUDIT_ACTIONS.ADMIN_USER_UPLOAD, '/api/admin/upload/students', req, {
+            total: rows.length,
+            inserted: insertResult.length
+        });
 
         return res.status(201).json({
             success:          true,
@@ -340,6 +346,11 @@ exports.toggleFeedbackSession = async (req, res) => {
         session.isOpen = !session.isOpen;
         await session.save();
 
+        await logEvent(req.user.id, AUDIT_ACTIONS.ADMIN_SESSION_TOGGLE, `/api/admin/sessions/${sessionId}/toggle`, req, {
+            sessionId,
+            newState: session.isOpen ? 'OPEN' : 'CLOSED'
+        });
+
         res.status(200).json({
             success: true,
             message: `Feedback session is now ${session.isOpen ? '🟢 OPEN' : '🔴 CLOSED'}.`,
@@ -562,6 +573,11 @@ exports.toggleQuestion = async (req, res) => {
 
         question.isActive = !question.isActive;
         await question.save();
+
+        await logEvent(req.user.id, AUDIT_ACTIONS.ADMIN_QUESTION_TOGGLE, `/api/admin/questions/${id}`, req, {
+            questionId: id,
+            newState: question.isActive ? 'ACTIVE' : 'INACTIVE'
+        });
 
         res.status(200).json({
             success: true,

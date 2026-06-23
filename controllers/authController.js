@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const passport = require('passport');
 const User = require('../models/User');
+const { logEvent, AUDIT_ACTIONS } = require('../middlewares/auditLogger');
 
 // ============================================================
 // CORE: Sign a JWT containing userId, role, and email
@@ -43,14 +44,15 @@ const sendTokenResponse = (user, statusCode, res, message = 'Authentication succ
                 role:  user.role,
                 section: user.section || null,
                 avatar:  user.avatar  || null,
-                requiresPasswordChange: user.requiresPasswordChange
+                requiresPasswordChange: user.requiresPasswordChange,
+                consentGiven: user.consentGiven || false
             }
         }
     });
 };
 
 // Exported for use in Google OAuth callback route
-exports.loginSuccessHandler = (req, res) => {
+exports.loginSuccessHandler = async (req, res) => {
     if (!req.user) {
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:4200'}/login?error=Google%20Authentication%20failed`);
     }
@@ -67,6 +69,11 @@ exports.loginSuccessHandler = (req, res) => {
 
     res.cookie('jwt', token, cookieOptions);
 
+    // Audit log
+    await logEvent(req.user._id, AUDIT_ACTIONS.LOGIN_SUCCESS, '/api/auth/google/callback', req, {
+        method: 'google_oauth'
+    });
+
     const userString = encodeURIComponent(JSON.stringify({
         id:      req.user._id,
         name:    req.user.name,
@@ -74,7 +81,8 @@ exports.loginSuccessHandler = (req, res) => {
         role:    req.user.role,
         section: req.user.section || null,
         avatar:  req.user.avatar  || null,
-        requiresPasswordChange: req.user.requiresPasswordChange
+        requiresPasswordChange: req.user.requiresPasswordChange,
+        consentGiven: req.user.consentGiven || false
     }));
 
     // Redirect to frontend app login route to consume token and user variables
@@ -83,6 +91,7 @@ exports.loginSuccessHandler = (req, res) => {
 
 // ============================================================
 // LOCAL AUTH: REGISTER
+// OWASP: Password complexity enforced by inputValidator middleware
 // ============================================================
 exports.registerLocal = async (req, res) => {
     try {
@@ -103,6 +112,10 @@ exports.registerLocal = async (req, res) => {
             section: section || (role === 'Student' ? 'Unassigned' : undefined)
         });
 
+        await logEvent(newUser._id, AUDIT_ACTIONS.LOGIN_SUCCESS, '/api/auth/register', req, {
+            method: 'local_register'
+        });
+
         sendTokenResponse(newUser, 201, res, 'Registration successful');
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
@@ -111,14 +124,22 @@ exports.registerLocal = async (req, res) => {
 
 // ============================================================
 // LOCAL AUTH: LOGIN
+// OWASP A07: Account lockout handled in passport strategy
 // ============================================================
 exports.loginLocal = (req, res, next) => {
-    passport.authenticate('local', { session: false }, (err, user, info) => {
-        if (err)   return res.status(500).json({ success: false, message: err.message });
-        if (!user) return res.status(401).json({ success: false, message: info?.message || 'Login failed' });
+    passport.authenticate('local', { session: false }, async (err, user, info) => {
+        if (err)   return res.status(500).json({ success: false, message: 'An internal error occurred.' });
+        if (!user) {
+            return res.status(401).json({ success: false, message: info?.message || 'Login failed' });
+        }
 
         // Update last login timestamp
         User.findByIdAndUpdate(user._id, { lastLogin: new Date() }).exec();
+
+        // Audit log
+        await logEvent(user._id, AUDIT_ACTIONS.LOGIN_SUCCESS, '/api/auth/login', req, {
+            method: 'local_password'
+        });
 
         sendTokenResponse(user, 200, res, 'Login successful');
     })(req, res, next);
@@ -127,7 +148,17 @@ exports.loginLocal = (req, res, next) => {
 // ============================================================
 // LOGOUT: Clear the JWT cookie
 // ============================================================
-exports.logout = (req, res) => {
+exports.logout = async (req, res) => {
+    // Audit log (if user is authenticated)
+    if (req.cookies?.jwt && req.cookies.jwt !== 'loggedout') {
+        try {
+            const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET);
+            await logEvent(decoded.id, AUDIT_ACTIONS.LOGOUT, '/api/auth/logout', req);
+        } catch (_) {
+            // Token might be expired — that's fine for logout
+        }
+    }
+
     res.cookie('jwt', 'loggedout', {
         expires:  new Date(Date.now() + 1000),
         httpOnly: true
@@ -165,7 +196,7 @@ exports.requestOTP = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'OTP sent successfully. Valid for 10 minutes.' });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: 'Failed to process OTP request.' });
     }
 };
 
@@ -198,9 +229,13 @@ exports.verifyOTP = async (req, res) => {
         user.lastLogin  = new Date();
         await user.save({ validateBeforeSave: false });
 
+        await logEvent(user._id, AUDIT_ACTIONS.LOGIN_SUCCESS, '/api/auth/otp/verify', req, {
+            method: 'otp'
+        });
+
         sendTokenResponse(user, 200, res, 'OTP verified successfully');
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: 'Failed to verify OTP.' });
     }
 };
 
@@ -212,32 +247,62 @@ exports.getMe = async (req, res) => {
         const user = await User.findById(req.user.id);
         res.status(200).json({ success: true, data: { user } });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: 'Failed to retrieve user profile.' });
     }
 };
 
 // ============================================================
-// CHANGE PASSWORD (forces requiresPasswordChange to false)
+// CHANGE PASSWORD
+//
+// OWASP A07 Enhancements:
+//   - Requires currentPassword for verification
+//   - Enforces password complexity (via inputValidator middleware)
+//   - Sets passwordChangedAt to invalidate old JWTs
 // ============================================================
 exports.changePassword = async (req, res) => {
     try {
-        const { newPassword } = req.body;
-        if (!newPassword || newPassword.length < 6) {
-            return res.status(400).json({ success: false, message: 'New password must be at least 6 characters long' });
-        }
+        const { currentPassword, newPassword } = req.body;
 
         const user = await User.findById(req.user.id).select('+password');
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
+        // Verify current password (skip for first-time forced changes)
+        if (!user.requiresPasswordChange) {
+            if (!currentPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Current password is required for verification.'
+                });
+            }
+
+            const isMatch = await user.correctPassword(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Current password is incorrect.'
+                });
+            }
+        }
+
+        if (!newPassword || newPassword.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password must be at least 8 characters long.'
+            });
+        }
+
         user.password = newPassword;
         user.requiresPasswordChange = false;
-        await user.save(); // this will trigger the pre-save hook to hash the new password
+        // passwordChangedAt is set automatically by the pre-save hook
+        await user.save();
 
-        // Issue a new token response
+        await logEvent(user._id, AUDIT_ACTIONS.PASSWORD_CHANGED, '/api/auth/change-password', req);
+
+        // Issue a new token response (old tokens are now invalid)
         sendTokenResponse(user, 200, res, 'Password updated successfully');
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: 'Failed to change password.' });
     }
 };

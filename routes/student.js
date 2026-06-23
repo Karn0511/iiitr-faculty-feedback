@@ -2,6 +2,7 @@ const express  = require('express');
 const router   = express.Router();
 const { protect, restrictTo }       = require('../middlewares/authMiddleware');
 const { checkSessionActive }        = require('../middlewares/sessionMiddleware');
+const { validateFeedback }          = require('../middlewares/inputValidator');
 const studentController             = require('../controllers/studentController');
 
 // All student routes require authentication + Student role
@@ -17,12 +18,13 @@ router.use(restrictTo('Student'));
 router.get('/courses', studentController.getAvailableCourses);
 
 // ============================================================
-// FEEDBACK SUBMISSION
+// FEEDBACK SUBMISSION — With input validation
 // POST /api/student/feedback
 // checkSessionActive must pass before any submission is allowed
 // ============================================================
 router.post('/feedback',
     checkSessionActive,       // Gate: is the window open?
+    validateFeedback,         // OWASP A03: validate all inputs
     studentController.submitFeedback
 );
 

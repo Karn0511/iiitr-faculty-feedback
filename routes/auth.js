@@ -4,14 +4,22 @@ const passport = require('passport');
 const rateLimit = require('express-rate-limit');
 const authController = require('../controllers/authController');
 const { protect } = require('../middlewares/authMiddleware');
+const {
+    validateLogin,
+    validateRegister,
+    validatePasswordChange,
+    validateOTPRequest,
+    validateOTPVerify
+} = require('../middlewares/inputValidator');
 
 // ============================================================
-// RATE LIMITERS
+// RATE LIMITERS — OWASP A07
 // Prevents brute-force attacks on sensitive auth endpoints
+// Tightened: 5 attempts per 15 minutes (was 10)
 // ============================================================
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Max 10 attempts per window
+    max: 5, // Max 5 attempts per window (OWASP best practice)
     message: { success: false, message: 'Too many attempts. Please try again after 15 minutes.' },
     standardHeaders: true,
     legacyHeaders: false
@@ -23,18 +31,24 @@ const otpLimiter = rateLimit({
     message: { success: false, message: 'Too many OTP requests. Please wait a minute.' }
 });
 
-// ============================================================
-// LOCAL AUTH ROUTES
-// ============================================================
-router.post('/register', authLimiter, authController.registerLocal);
-router.post('/login',    authLimiter, authController.loginLocal);
-router.get('/logout',                 authController.logout);
+const passwordChangeLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 3, // Max 3 password change attempts per window
+    message: { success: false, message: 'Too many password change attempts. Please try again later.' }
+});
 
 // ============================================================
-// OTP AUTH ROUTES
+// LOCAL AUTH ROUTES — With input validation
 // ============================================================
-router.post('/otp/request', otpLimiter, authController.requestOTP);
-router.post('/otp/verify',  authLimiter, authController.verifyOTP);
+router.post('/register', authLimiter, validateRegister, authController.registerLocal);
+router.post('/login',    authLimiter, validateLogin,    authController.loginLocal);
+router.get('/logout',                                   authController.logout);
+
+// ============================================================
+// OTP AUTH ROUTES — With input validation
+// ============================================================
+router.post('/otp/request', otpLimiter,  validateOTPRequest, authController.requestOTP);
+router.post('/otp/verify',  authLimiter, validateOTPVerify,  authController.verifyOTP);
 
 // ============================================================
 // GOOGLE OAUTH ROUTES
@@ -65,6 +79,6 @@ router.get('/google/failure', (req, res) => {
 // PROTECTED: Current user info & Password Management
 // ============================================================
 router.get('/me', protect, authController.getMe);
-router.put('/change-password', protect, authController.changePassword);
+router.put('/change-password', protect, passwordChangeLimiter, validatePasswordChange, authController.changePassword);
 
 module.exports = router;

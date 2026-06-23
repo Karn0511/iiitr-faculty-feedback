@@ -1,9 +1,15 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { logEvent, AUDIT_ACTIONS } = require('./auditLogger');
 
 // ============================================================
 // PROTECT: Verify JWT and attach user to req.user
 // Accepts token from HTTP-only cookie OR Bearer header
+//
+// OWASP A07 Enhancements:
+//   - Validates passwordChangedAt vs JWT iat (issued-at)
+//   - Rejects tokens for locked accounts
+//   - Audit logs unauthorized access attempts
 // ============================================================
 exports.protect = async (req, res, next) => {
     try {
@@ -29,11 +35,21 @@ exports.protect = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Confirm the user still exists in DB (handles deleted account edge case)
-        const currentUser = await User.findById(decoded.id);
+        const currentUser = await User.findById(decoded.id)
+            .select('+passwordChangedAt +failedLoginAttempts +lockUntil');
+
         if (!currentUser) {
             return res.status(401).json({
                 success: false,
                 message: 'The account associated with this token no longer exists.'
+            });
+        }
+
+        // Check if account is locked
+        if (currentUser.lockUntil && currentUser.lockUntil > Date.now()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account is temporarily locked. Please try again later.'
             });
         }
 
@@ -44,10 +60,23 @@ exports.protect = async (req, res, next) => {
             });
         }
 
+        // OWASP A07: Invalidate JWT if password was changed after token was issued
+        if (currentUser.changedPasswordAfter && currentUser.changedPasswordAfter(decoded.iat)) {
+            return res.status(401).json({
+                success: false,
+                message: 'Password was recently changed. Please log in again.'
+            });
+        }
+
         // Attach full user object to request for downstream use
         req.user = currentUser;
         next();
     } catch (error) {
+        // Log unauthorized access attempts
+        await logEvent(null, AUDIT_ACTIONS.UNAUTHORIZED_ACCESS, req.originalUrl, req, {
+            error: 'Invalid or expired token'
+        });
+
         return res.status(401).json({
             success: false,
             message: 'Invalid or expired session. Please log in again.'
@@ -63,6 +92,12 @@ exports.protect = async (req, res, next) => {
 exports.restrictTo = (...roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {
+            // Log unauthorized role-based access attempts
+            logEvent(req.user?.id, AUDIT_ACTIONS.UNAUTHORIZED_ACCESS, req.originalUrl, req, {
+                requiredRoles: roles,
+                userRole: req.user.role
+            });
+
             return res.status(403).json({
                 success: false,
                 message: `Access denied. This route is restricted to: ${roles.join(', ')}.`

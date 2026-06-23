@@ -1,6 +1,7 @@
 const Feedback         = require('../models/Feedback');
 const Assignment       = require('../models/Assignment');
 const FeedbackSession  = require('../models/FeedbackSession');
+const { logEvent, AUDIT_ACTIONS } = require('../middlewares/auditLogger');
 
 // ============================================================
 // SUBMIT FEEDBACK (One-attempt enforced)
@@ -75,6 +76,13 @@ exports.submitFeedback = async (req, res) => {
             remark: remark?.trim() || undefined
         });
 
+        // Audit log: feedback submission
+        await logEvent(studentId, AUDIT_ACTIONS.FEEDBACK_SUBMITTED, '/api/student/feedback', req, {
+            courseId,
+            facultyId,
+            sessionId
+        });
+
         res.status(201).json({
             success:     true,
             message:     'Feedback submitted successfully. Thank you!',
@@ -94,7 +102,7 @@ exports.submitFeedback = async (req, res) => {
                 message: 'Feedback already submitted for this course.'
             });
         }
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: 'Failed to submit feedback.' });
     }
 };
 

@@ -1,10 +1,38 @@
 const crypto = require('crypto');
 
-// Shared secret string for End-to-End Encryption
-const secretString = process.env.E2EE_SECRET_KEY || 'IIIT_RANCHI_SECURE_E2EE_SECRET_2026';
+// ============================================================
+// CRYPTO HELPER — AES-256-GCM Encryption/Decryption
+//
+// OWASP A02:2021 — Cryptographic Failures
+//
+// SECURITY CHANGES:
+//   1. REMOVED hardcoded fallback key
+//   2. Key derivation uses PBKDF2 with salt (not raw SHA-256)
+//   3. Startup validation: throws if E2EE_SECRET_KEY is missing
+// ============================================================
 
-// Derive a 256-bit (32-byte) key from the secret string using SHA-256
-const e2eeKey = crypto.createHash('sha256').update(secretString).digest();
+// Validate that the encryption key is set in environment
+const secretString = process.env.E2EE_SECRET_KEY;
+if (!secretString && process.env.NODE_ENV === 'production') {
+    throw new Error(
+        '[SECURITY] E2EE_SECRET_KEY is not set in environment variables. ' +
+        'This is required for data encryption. Set it in your .env file.'
+    );
+}
+
+// Use a fallback ONLY in development with a clear warning
+const effectiveSecret = secretString || (() => {
+    console.warn(
+        '\n⚠️  [SECURITY WARNING] E2EE_SECRET_KEY not set. Using development fallback.\n' +
+        '    Set E2EE_SECRET_KEY in .env before deploying to production.\n'
+    );
+    return 'DEV_ONLY_IIIT_RANCHI_E2EE_KEY_NOT_FOR_PRODUCTION';
+})();
+
+// Derive a 256-bit (32-byte) key using PBKDF2 with a fixed salt
+// PBKDF2 is resistant to brute-force attacks unlike raw SHA-256
+const SALT = 'iiit-ranchi-feedback-e2ee-salt-v1';
+const e2eeKey = crypto.pbkdf2Sync(effectiveSecret, SALT, 100000, 32, 'sha512');
 
 /**
  * Decrypts an AES-256-GCM encrypted string formatted as:
@@ -38,7 +66,8 @@ function decrypt(encryptedText) {
         decrypted += decipher.final('utf8');
         return decrypted;
     } catch (err) {
-        console.error('Decryption failed, returning original string:', err.message);
+        // Don't log the actual encrypted content — security risk
+        console.error('[CRYPTO] Decryption failed — returning original string.');
         return encryptedText;
     }
 }
@@ -64,7 +93,7 @@ function encrypt(text) {
         
         return `${ivHex}:${ciphertext}:${authTag}`;
     } catch (err) {
-        console.error('Encryption failed:', err.message);
+        console.error('[CRYPTO] Encryption failed:', err.message);
         return text;
     }
 }

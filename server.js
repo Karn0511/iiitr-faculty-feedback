@@ -1,10 +1,27 @@
 require('dotenv').config();
-const express    = require('express');
-const cors       = require('cors');
-const helmet     = require('helmet');
+const express      = require('express');
+const cors         = require('cors');
+const helmet       = require('helmet');
 const cookieParser = require('cookie-parser');
-const connectDB  = require('./config/db');
-const passport   = require('./config/passport');
+const crypto       = require('crypto');
+const hpp          = require('hpp');
+const connectDB    = require('./config/db');
+const passport     = require('./config/passport');
+const mongoSanitize = require('./middlewares/mongoSanitize');
+
+// ============================================================
+// STARTUP ENVIRONMENT VALIDATION
+// ============================================================
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
+if (process.env.NODE_ENV === 'production') {
+    requiredEnvVars.push('E2EE_SECRET_KEY');
+}
+requiredEnvVars.forEach(v => {
+    if (!process.env[v]) {
+        console.error(`❌ [STARTUP ERROR] Missing critical environment variable: ${v}`);
+        process.exit(1);
+    }
+});
 
 // ============================================================
 // CONNECT TO DATABASE
@@ -15,9 +32,33 @@ const app = express();
 app.set('trust proxy', 1); // Trust the first hop from the reverse proxy (Render) securely
 
 // ============================================================
-// SECURITY MIDDLEWARE
+// REQUEST ID & CUSTOM SECURITY HEADERS
 // ============================================================
-app.use(helmet());                   // Set secure HTTP headers
+app.use((req, res, next) => {
+    req.id = crypto.randomUUID();
+    res.setHeader('X-Request-Id', req.id);
+    res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=(), interest-cohort=()");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    next();
+});
+
+// ============================================================
+// SECURITY MIDDLEWARE (HELMET CSP & CORS)
+// ============================================================
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:"]
+        }
+    }
+}));
+
 const allowedOrigins = [
     process.env.CLIENT_URL,
     'http://localhost:4200',
@@ -42,11 +83,13 @@ app.use(cors({
 }));
 
 // ============================================================
-// BODY PARSERS
+// BODY PARSERS & SANITIZATION
 // ============================================================
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());             // Parse HTTP-only JWT cookies
+app.use(mongoSanitize);              // Prevent NoSQL injection
+app.use(hpp());                      // Prevent HTTP Parameter Pollution
 
 // ============================================================
 // PASSPORT INIT (no sessions — stateless JWT only)
@@ -56,10 +99,12 @@ app.use(passport.initialize());
 // ============================================================
 // API ROUTES
 // ============================================================
-app.use('/api/auth',    require('./routes/auth'));
-app.use('/api/admin',   require('./routes/admin'));
-app.use('/api/student', require('./routes/student'));
-app.use('/api/faculty', require('./routes/faculty'));
+app.use('/api/auth',             require('./routes/auth'));
+app.use('/api/admin',            require('./routes/admin'));
+app.use('/api/admin/audit-logs', require('./routes/audit'));
+app.use('/api/privacy',          require('./routes/privacy'));
+app.use('/api/student',          require('./routes/student'));
+app.use('/api/faculty',          require('./routes/faculty'));
 
 
 const mongoose = require('mongoose');
@@ -614,7 +659,10 @@ app.use((req, res) => {
 // ============================================================
 app.use((err, req, res, _next) => {
     const statusCode = err.statusCode || 500;
-    console.error(`❌ [${new Date().toISOString()}] ${err.message}`);
+    const isProd = process.env.NODE_ENV === 'production';
+    
+    // Log the detailed error internally
+    console.error(`❌ [RequestId: ${req.id || 'N/A'}] [${new Date().toISOString()}] ${err.stack || err.message}`);
 
     if (err.name === 'ValidationError') {
         return res.status(400).json({
@@ -629,7 +677,8 @@ app.use((err, req, res, _next) => {
 
     res.status(statusCode).json({
         success:   false,
-        message:   err.message || 'Internal Server Error',
+        message:   isProd && statusCode === 500 ? 'An unexpected error occurred. Please contact the administrator.' : (err.message || 'Internal Server Error'),
+        requestId: req.id,
         timestamp: new Date().toISOString()
     });
 });
